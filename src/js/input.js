@@ -149,87 +149,56 @@ function Key(label, help, action, type) {
 
 Key.getUpArrow = function (editor) {
     return new Key('&uparrow;', 'parent', function () {
-        if (editor.selection !== null) {
-            editor.select(editor.selection.parent);
-        }
+        editor.up();
     });
 };
 
 
 Key.getDownArrow = function (editor) {
     return new Key('&downarrow;', 'first child', function () {
-        if (editor.selection !== null) {
-            var node = editor.selection.getFirstChild();
-            editor.select(node !== null ? node : editor.selection.getNext());
-        }
+        editor.down();
     });
 };
 
 Key.getLeftArrow = function (editor) {
     return new Key('&leftarrow;', 'previous', function () {
-        if (editor.selection !== null) {
-            editor.select(editor.selection.getPreviousDfs());
-        }
+        editor.left();
     });
 };
 
 Key.getRightArrow = function (editor) {
     return new Key('&rightarrow;', 'next', function () {
-        if (editor.selection !== null) {
-            editor.select(editor.selection.getNextDfs());
-        }
+        editor.right();
     });
 };
 
 Key.getNumber = function (editor, value, help) {
-    var value = value.toString();
     var help = typeof help !== 'undefined' ? help : null;
     return new Key(value, help, function () {
-        if (editor.selection !== null) {
-            if (editor.selection.type === 'integer') {
-                if (value !== '.' || editor.selection.value.indexOf('.') === -1) {
-                    editor.selection.value += value;
-                    editor.render(editor.selection);
-                    editor.select(editor.selection);
-                }
-            } else {
-                if (value === '.') {
-                    value = '0.';
-                }
-                var node = new AstNode('integer', value);
-                editor.selection.replaceWith(node);
-                editor.render(node.parent);
-                editor.select(node);
-            }
-        }
+        editor.number(value);
     }, 'literal');
 };
 
-Key.getDelete = function (editor) {
-    return new Key('del', 'delete', function () {
+Key.getName = function (editor, name) {
+    return new Key(name, null, function () {
         if (editor.selection !== null && editor.selection.parent !== null) {
-            var node = new AstNode('placeholder');
+            var node = new AstNode('id', name);
             editor.selection.replaceWith(node);
             editor.render(node.parent);
             editor.select(node);
         }
+    }, 'id');
+};
+
+Key.getDelete = function (editor) {
+    return new Key('del', 'delete', function () {
+        editor.delete();
     });
 };
 
 Key.getBackspace = function (editor) {
     return new Key('&Leftarrow;', 'backspace', function () {
-        if (editor.selection !== null && editor.selection.type === 'integer') {
-            editor.selection.value = editor.selection.value.slice(0, -1);
-            if (editor.selection.value === '') {
-                var node = new AstNode('placeholder');
-                editor.selection.replaceWith(node);
-                editor.render(node.parent);
-                editor.select(node);
-            } else {
-                editor.render(editor.selection);
-                editor.select(editor.selection);
-            }
-        }
+        editor.backspace();
     });
 };
 
@@ -295,6 +264,31 @@ Key.getLambda = function (editor) {
             editor.select(node.children[1]);
         }
     }, 'macro');
+};
+
+Key.getLet = function (editor) {
+    return new Key('let', 'assignment', function () {
+        if (editor.selection !== null && editor.selection.parent !== null) {
+            var node = new AstNode('macro', 'let');
+            var expr = editor.selection;
+            expr.replaceWith(node);
+            var parameters = new AstNode('parameters');
+            node.addChild(parameters);
+            node.addChild(expr);
+            editor.render(node.parent);
+            if (node.children[1].type === 'placeholder') {
+                editor.select(node.children[0]);
+            } else {
+                editor.select(node.children[1]);
+            }
+        }
+    }, 'macro');
+};
+
+Key.getAssign = function (editor) {
+    return new Key('=', 'assign', function () {
+        alert('not implemented');
+    });
 };
 
 Key.prototype.render = function () {

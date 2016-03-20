@@ -40,14 +40,16 @@ var keymatrix = new input.KeyMatrix(editor, document.getElementById('keymatrix')
 var numberLayout = function (matrix, cols, rows) {
     input.KeyMatrix.clear(matrix);
     var num = 1;
-    for (var i = 0; i < 3; i++) {
+    for (var i = 3; i > 0; i--) {
         for (var j = 0; j < 3; j++) {
-            matrix[j + 1][i] = input.Key.getNumber(editor, num++);
+            matrix[j + 1][rows - i] = input.Key.getNumber(editor, num++);
         }
     }
-    matrix[4][0] = input.Key.getBackspace(editor);
-    matrix[4][1] = input.Key.getNumber(editor, '.');
-    matrix[4][2] = input.Key.getNumber(editor, 0);
+    matrix[0][rows - 3] = input.Key.getName(editor, 'true');
+    matrix[0][rows - 2] = input.Key.getName(editor, 'false');
+    matrix[4][rows - 3] = input.Key.getBackspace(editor);
+    matrix[4][rows - 2] = input.Key.getNumber(editor, '.');
+    matrix[4][rows - 1] = input.Key.getNumber(editor, 0);
     if (cols < 10) {
         matrix[0][rows - 1] = new input.Key('( )', 'expressions', function () {
             keymatrix.setLayout(defaultLayout);
@@ -64,19 +66,25 @@ var defaultLayout = function (matrix, cols, rows) {
             keymatrix.setLayout(numberLayout);
         });
     }
+    if (rows > 3) {
+        matrix[cols - 1][rows - 4] = input.Key.getAssign(editor);
+    } else {
+        matrix[cols - 2][rows - 3] = input.Key.getAssign(editor);
+    }
     matrix[cols - 1][rows - 3] = input.Key.getDelete(editor);
     matrix[cols - 1][rows - 2] = input.Key.getUndo(editor);
     matrix[cols - 2][rows - 2] = input.Key.getUpArrow(editor);
     matrix[cols - 2][rows - 1] = input.Key.getDownArrow(editor);
     matrix[cols - 3][rows - 1] = input.Key.getLeftArrow(editor);
     matrix[cols - 1][rows - 1] = input.Key.getRightArrow(editor);
-    
+
     matrix[cols - 5][0] = input.Key.getMethod(editor, '+', 1);
     matrix[cols - 4][0] = input.Key.getMethod(editor, '-', 1);
     matrix[cols - 3][0] = input.Key.getMethod(editor, '*', 1);
-    
+
     matrix[cols - 5][rows - 2] = input.Key.getIf(editor);
     matrix[cols - 4][rows - 2] = input.Key.getLambda(editor);
+    matrix[cols - 3][rows - 2] = input.Key.getLet(editor);
 };
 
 keymatrix.defaultLayout = defaultLayout;
@@ -84,4 +92,36 @@ keymatrix.defaultLayout = defaultLayout;
 keymatrix.autoResize();
 window.addEventListener('resize', function () {
     keymatrix.autoResize();
+});
+
+window.addEventListener('keydown', function (e) {
+    var key = e.keyCode || e.which;
+    if (key >= 48 && key <= 57) {
+        editor.number(key - 48);
+        return;
+    }
+    switch (key) {
+        case 8:
+            e.preventDefault();
+            editor.backspace();
+            break;
+        case 37:
+            editor.left();
+            break;
+        case 38:
+            editor.up();
+            break;
+        case 39:
+            editor.right();
+            break;
+        case 40:
+            editor.down();
+            break;
+        case 46:
+            editor.delete();
+            break;
+        case 190:
+            editor.number('.');
+            break;
+    }
 });

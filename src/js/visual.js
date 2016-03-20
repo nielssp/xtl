@@ -24,7 +24,7 @@ function Editor(element) {
      * @type {Element}
      */
     this.element = element;
-    
+
     /**
      * @type {AstNode}
      */
@@ -98,7 +98,7 @@ Editor.prototype.render = function (node) {
         _this.select(node);
         e.stopPropagation();
     });
-    return el;  
+    return el;
 };
 
 /**
@@ -123,10 +123,82 @@ Editor.prototype.select = function (node) {
             } while (obj = obj.offsetParent);
             if (pos < this.element.scrollTop) {
                 this.element.scrollTop = pos - this.element.clientHeight / 2;
-            } else if (pos + 30> this.element.scrollTop + this.element.clientHeight) {
+            } else if (pos + 30 > this.element.scrollTop + this.element.clientHeight) {
                 this.element.scrollTop = pos - this.element.clientHeight / 2;
             }
         }
     }
     return true;
+};
+
+Editor.prototype.up = function () {
+    if (this.selection !== null) {
+        this.select(this.selection.parent);
+    }
+};
+
+Editor.prototype.down = function () {
+    if (this.selection !== null) {
+        var node = this.selection.getFirstChild();
+        this.select(node !== null ? node : this.selection.getNext());
+    }
+};
+
+Editor.prototype.left = function () {
+    if (this.selection !== null) {
+        this.select(this.selection.getPreviousDfs());
+    }
+};
+
+Editor.prototype.right = function () {
+    if (this.selection !== null) {
+        this.select(this.selection.getNextDfs());
+    }
+};
+
+Editor.prototype.delete = function () {
+    if (this.selection !== null && this.selection.parent !== null) {
+        var node = new AstNode('placeholder');
+        this.selection.replaceWith(node);
+        this.render(node.parent);
+        this.select(node);
+    }
+};
+
+Editor.prototype.backspace = function () {
+    if (this.selection !== null && this.selection.type === 'integer') {
+        this.selection.value = this.selection.value.slice(0, -1);
+        if (this.selection.value === '') {
+            var node = new AstNode('placeholder');
+            this.selection.replaceWith(node);
+            this.render(node.parent);
+            this.select(node);
+        } else {
+            this.render(this.selection);
+            this.select(this.selection);
+        }
+    }
+};
+
+Editor.prototype.number = function (char) {
+    if (this.selection !== null && this.selection.parent !== null) {
+        if (this.selection !== null) {
+            var char = char.toString();
+            if (this.selection.type === 'integer') {
+                if (char !== '.' || this.selection.value.indexOf('.') === -1) {
+                    this.selection.value += char;
+                    this.render(this.selection);
+                    this.select(this.selection);
+                }
+            } else {
+                if (char === '.') {
+                    char = '0.';
+                }
+                var node = new AstNode('integer', char);
+                this.selection.replaceWith(node);
+                this.render(node.parent);
+                this.select(node);
+            }
+        }
+    }
 };
