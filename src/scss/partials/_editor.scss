@@ -1,0 +1,103 @@
+/*
+Copyright (C) 2016 Niels Sonnich Poulsen (http://nielssp.dk)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+@mixin sexpr {
+    &:before {
+        content: '(';
+        margin-left: -5px;
+        color: #5C7077;
+        display: inline-block;
+    }
+
+    &:after {
+        content: ')';
+        display: block;
+        margin-left: -5px;
+        color: #5C7077;
+    }
+}
+
+
+#editor {
+    font-family: monospace;
+    font-size: 1.6em;
+    line-height: 1.4em;
+    padding: 20px 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: (55px + 4) * 3 + 8px;
+    overflow: auto;
+
+    .function-definition {
+        padding-left: 10px;
+        @include sexpr;
+    }
+
+    .expression {
+        padding-left: 10px;
+        @include sexpr;
+    }
+
+
+    .keyword, .method, .id, .literal, .subexpression {
+        display: inline;
+        margin: 0 5px;
+    }
+
+    .subexpression:before {
+        content: '(';
+        color: #5C7077;
+    }
+
+    .subexpression:after {
+        content: ')';
+        color: #5C7077;
+    }
+
+    .keyword {
+        color: #1374C3;
+        font-weight: bold;
+    }
+
+    .method {
+        color: #CB4B16;
+    }
+
+    .literal {
+        color: #209B95;
+    }
+
+    .placeholder {
+        display: block;
+        padding-left: 20px;
+        &:before {
+            content: '...';
+            background-color: #ddd;
+        }
+    }
+}
+
+
+
+#ast-selection {
+    background-color: #eef;
+    outline: 1px solid #ccf;
+}
+
+

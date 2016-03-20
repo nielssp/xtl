@@ -1,0 +1,106 @@
+/*
+Copyright (C) 2016 Niels Sonnich Poulsen (http://nielssp.dk)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+#keymatrix {
+    padding: 0 2px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: #333;
+    button {
+        background-color: #404040;
+        color: #eee;
+        border: 1px solid #444444;
+        border-bottom: 1px solid #4a4a4a;
+        border-right: 1px solid #4a4a4a;
+        border-radius: 4px;
+        font-size: 20px;
+        display: block;
+        margin: 4px 0;
+        width: 100%;
+        height: 55px;
+        position: relative;
+
+        .help {
+            font-size: 11px;
+            position: absolute;
+            bottom: 3px;
+            left: 3px;
+            color: #9090b0;
+        }
+
+        &.literal {
+            background-color: #404949;
+        }
+
+        &.macro {
+            background-color: #404049;
+        }
+
+        &.method {
+            background-color: #494040;
+        }
+
+        &:hover, &:focus {
+            outline: 0;
+            border: 1px solid #555;
+            border-bottom: 1px solid #5b5b5b;
+            border-right: 1px solid #5b5b5b;
+        }
+        &:active {
+            background-color: #303030;
+        }
+    }
+
+    .column {
+        width: 1/6 * 100%;
+        float: left;
+        padding: 0 2px;
+
+        &.numpad {
+            display: none;
+        }
+    }
+
+    &.cols-5 .column {
+        width: 1/5 * 100%;
+    }
+
+    &.cols-6 .column {
+        width: 1/6 * 100%;
+    }
+
+    &.cols-10 .column {
+        width: 1/10 * 100%;
+    }
+
+    &.cols-12 .column {
+        width: 1/12 * 100%;
+    }
+}
+
+@media screen and (min-height: 600px) {
+    #editor {
+        bottom: (75px + 4) * 3 + 8px;
+    }
+    #keymatrix {
+        button {
+            height: 75px;
+        }
+    }
+}
