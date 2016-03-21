@@ -59,8 +59,10 @@ var numberLayout = function (matrix, cols, rows) {
 
 var defaultLayout = function (matrix, cols, rows) {
     input.KeyMatrix.clear(matrix);
+    left = 0;
     if (cols >= 10) {
         numberLayout(matrix, cols, rows);
+        left = 5;
     } else {
         matrix[0][rows - 1] = new input.Key('123', 'literals', function () {
             keymatrix.setLayout(numberLayout);
@@ -78,21 +80,24 @@ var defaultLayout = function (matrix, cols, rows) {
     matrix[cols - 3][rows - 1] = input.Key.getLeftArrow(editor);
     matrix[cols - 1][rows - 1] = input.Key.getRightArrow(editor);
 
-    matrix[cols - 5][0] = input.Key.getMethod(editor, '+', 1);
-    matrix[cols - 4][0] = input.Key.getMethod(editor, '-', 1);
-    matrix[cols - 3][0] = input.Key.getMethod(editor, '*', 1);
+    matrix[left][0] = input.Key.getMethod(editor, '+', 1);
+    matrix[left + 1][0] = input.Key.getMethod(editor, '-', 1);
+    matrix[left + 2][0] = input.Key.getMethod(editor, '*', 1);
 
-    matrix[cols - 5][rows - 2] = input.Key.getIf(editor);
-    matrix[cols - 4][rows - 2] = input.Key.getLambda(editor);
-    matrix[cols - 3][rows - 2] = input.Key.getLet(editor);
+    matrix[left][rows - 2] = input.Key.getIf(editor);
+    matrix[left + 1][rows - 2] = input.Key.getLambda(editor);
+    matrix[left + 2][rows - 2] = input.Key.getLet(editor);
 };
 
 keymatrix.defaultLayout = defaultLayout;
 
-keymatrix.autoResize();
-window.addEventListener('resize', function () {
+var updateSize = function () {
     keymatrix.autoResize();
-});
+    editor.element.style.bottom = keymatrix.element.offsetHeight + 'px';
+};
+
+window.addEventListener('resize', updateSize);
+updateSize();
 
 window.addEventListener('keydown', function (e) {
     var key = e.keyCode || e.which;

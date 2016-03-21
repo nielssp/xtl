@@ -1,13 +1,6 @@
 {
   "name": "xtl",
   "version": "0.1.0",
-  "keywords": [
-    "util",
-    "functional",
-    "server",
-    "client",
-    "browser"
-  ],
   "contributors": [],
   "dependencies": {},
   "devDependencies": {
