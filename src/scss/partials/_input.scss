@@ -77,20 +77,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         }
     }
 
-    &.cols-5 .column {
-        width: 1/5 * 100%;
-    }
-
-    &.cols-6 .column {
-        width: 1/6 * 100%;
-    }
-
-    &.cols-10 .column {
-        width: 1/10 * 100%;
-    }
-
-    &.cols-12 .column {
-        width: 1/12 * 100%;
+    @for $i from 5 through 12 {
+        &.cols-#{$i} .column {
+            width: 1 / $i * 100%;
+        }
     }
 }
 
