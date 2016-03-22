@@ -17,7 +17,7 @@
 
 var AstNode = require('./AstNode');
 
-exports.Editor = Editor;
+module.exports = Editor;
 
 function Editor(element) {
     /**
@@ -85,7 +85,7 @@ Editor.prototype.render = function (node) {
             el.className = 'id';
             el.innerHTML = node.value;
             break;
-        case 'integer':
+        case 'number':
             el.className = 'literal';
             el.innerHTML = node.value;
             break;
@@ -98,6 +98,13 @@ Editor.prototype.render = function (node) {
         _this.select(node);
         e.stopPropagation();
     });
+    if (node.error !== null) {
+        var errorEl = document.createElement('div');
+        errorEl.className = 'error';
+        errorEl.innerHTML = node.error;
+        el.className += ' has-error';
+        el.appendChild(errorEl);
+    }
     return el;
 };
 
@@ -184,7 +191,7 @@ Editor.prototype.number = function (char) {
     if (this.selection !== null && this.selection.parent !== null) {
         if (this.selection !== null) {
             var char = char.toString();
-            if (this.selection.type === 'integer') {
+            if (this.selection.type === 'number') {
                 if (char !== '.' || this.selection.value.indexOf('.') === -1) {
                     this.selection.value += char;
                     this.render(this.selection);
@@ -194,7 +201,7 @@ Editor.prototype.number = function (char) {
                 if (char === '.') {
                     char = '0.';
                 }
-                var node = new AstNode('integer', char);
+                var node = new AstNode('number', char);
                 this.selection.replaceWith(node);
                 this.render(node.parent);
                 this.select(node);

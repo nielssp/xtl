@@ -20,10 +20,13 @@ require('../scss/main.scss');
 
 var input = require('./input');
 
-var visual = require('./visual');
+var Editor = require('./Editor');
 
 var AstNode = require('./AstNode');
 
+var Module = require('./Module');
+
+var program = new Module('program');
 
 var ast = new AstNode('definition');
 ast.addChild(new AstNode('id', 'main'));
@@ -31,7 +34,9 @@ ast.addChild(new AstNode('parameters'));
 var placeholder = new AstNode('placeholder');
 ast.addChild(placeholder);
 
-var editor = new visual.Editor(document.getElementById('editor'));
+program.members.main = ast;
+
+var editor = new Editor(document.getElementById('editor'));
 editor.setRoot(ast);
 editor.select(placeholder);
 
@@ -80,13 +85,20 @@ var defaultLayout = function (matrix, cols, rows) {
     matrix[cols - 3][rows - 1] = input.Key.getLeftArrow(editor);
     matrix[cols - 1][rows - 1] = input.Key.getRightArrow(editor);
 
-    matrix[left][0] = input.Key.getMethod(editor, '+', 1);
-    matrix[left + 1][0] = input.Key.getMethod(editor, '-', 1);
-    matrix[left + 2][0] = input.Key.getMethod(editor, '*', 1);
+    // TODO: find available methods based on editor.selection.typeAnnotation
+    matrix[left][0] = new input.Key('test', '', function () {
+        editor.selection.error = 'i am error';
+        editor.render(editor.selection);
+        editor.select(editor.selection);
+    });
 
     matrix[left][rows - 2] = input.Key.getIf(editor);
     matrix[left + 1][rows - 2] = input.Key.getLambda(editor);
     matrix[left + 2][rows - 2] = input.Key.getLet(editor);
+    
+    if (editor.selection !== null && editor.selection.type === 'definition') {
+        matrix[cols -4][rows -1] = new input.Key('rename', null, function () {});
+    }
 };
 
 keymatrix.defaultLayout = defaultLayout;

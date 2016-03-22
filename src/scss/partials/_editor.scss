@@ -82,6 +82,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     .literal {
         color: #209B95;
     }
+    
+    .error {
+        float: right;
+        color: #CC3333;
+        margin-right: 5px;
+        display: none;
+        font-size: 0.8em;
+        font-family: sans-serif;
+    }
+    
+    .has-error {
+        outline: 1px solid #CC3333;
+    }
 
     .placeholder {
         display: block;
@@ -98,6 +111,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ast-selection {
     background-color: #eef;
     outline: 1px solid #ccf;
+    
+    & > .error {
+        display: block;
+    }
 }
 
 

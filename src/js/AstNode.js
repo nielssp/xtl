@@ -39,6 +39,11 @@ function AstNode(type, value) {
      * @type {Type}
      */
     this.typeAnnotation = null;
+    
+    /**
+     * @type {?string}
+     */
+    this.error = null;
 
     /**
      * @type {Element}
