@@ -16,7 +16,6 @@
  */
 
 var AstNode = require('./AstNode');
-var visual = require('./visual');
 
 exports.KeyMatrix = KeyMatrix;
 
@@ -25,12 +24,12 @@ exports.Key = Key;
 /**
  * 
  * @class
- * @param {visual.Editor} editor
+ * @param {Editor} editor
  * @param {Element} element
  */
 function KeyMatrix(editor, element) {
     /**
-     * @type {visual.Editor}
+     * @type {Editor}
      */
     this.editor = editor;
 
