@@ -59,7 +59,27 @@ function AstNode(type, value) {
      * @type {AstNode[]}
      */
     this.children = [];
+
+    this.handlers = {};
 }
+
+AstNode.prototype.on = function (name, handler) {
+    if (!this.handlers.hasOwnProperty(name)) {
+        this.handlers[name] = [];
+    }
+    this.handlers[name].push(handler);
+};
+
+AstNode.prototype.trigger = function (event) {
+    if (this.handlers.hasOwnProperty(event.type)) {
+        this.handlers[event.type].forEach(function (handler) {
+            if (handler.call(this, event) === false) {
+                return false;
+            }
+        });
+    }
+    return true;
+};
 
 /**
  * Replace a child with another node.

@@ -29,6 +29,10 @@ function Editor(element) {
      * @type {AstNode}
      */
     this.selection = null;
+
+    this.history = [];
+
+    this.handlers = {};
 }
 
 Editor.prototype.setRoot = function (node) {
@@ -50,11 +54,23 @@ Editor.prototype.render = function (node) {
             el.className = 'function-definition';
             var kw = document.createElement('div');
             kw.className = 'keyword';
-            kw.innerHTML = 'function';
+            kw.innerHTML = 'define';
             el.appendChild(kw);
-            node.children.forEach(function (child) {
-                el.appendChild(this.render(child));
-            }, this);
+            var name = document.createElement('div');
+            name.className = 'id';
+            name.innerHTML = node.children[0].value;
+            if (node.children[1].children.length > 0) {
+                var sig = document.createElement('div');
+                sig.className = 'subexpression';
+                sig.appendChild(name);
+                node.children[1].children.forEach(function (child) {
+                    sig.appendChild(this.render(child));
+                }, this);
+                el.appendChild(sig);
+            } else {
+                el.appendChild(name);
+            }
+            el.appendChild(this.render(node.children[2]));
             break;
         case 'parameters':
             el.className = 'subexpression';
@@ -108,6 +124,24 @@ Editor.prototype.render = function (node) {
     return el;
 };
 
+Editor.prototype.on = function (name, handler) {
+    if (!this.handlers.hasOwnProperty(name)) {
+        this.handlers[name] = [];
+    }
+    this.handlers[name].push(handler);
+};
+
+Editor.prototype.trigger = function (event) {
+    if (this.handlers.hasOwnProperty(event.type)) {
+        this.handlers[event.type].forEach(function (handler) {
+            if (handler.call(this, event) === false) {
+                return false;
+            }
+        });
+    }
+    return true;
+};
+
 /**
  * 
  * @param {AstNode} node
@@ -117,6 +151,7 @@ Editor.prototype.select = function (node) {
         return false;
     }
     if (this.selection !== null && this.selection.element !== null) {
+        this.trigger({type: 'deselect', node: this.selection});
         this.selection.element.id = '';
     }
     this.selection = node;
@@ -135,7 +170,20 @@ Editor.prototype.select = function (node) {
             }
         }
     }
+    this.trigger({type: 'select', node: node});
     return true;
+};
+
+Editor.prototype.do = function (apply, unapply) {
+    this.history.push({apply: apply, unapply: unapply});
+    apply.call(this);
+};
+
+Editor.prototype.undo = function () {
+    var action = this.history.pop();
+    if (typeof action !== 'undefined') {
+        action.unapply.call(this);
+    }
 };
 
 Editor.prototype.up = function () {
@@ -165,15 +213,22 @@ Editor.prototype.right = function () {
 
 Editor.prototype.delete = function () {
     if (this.selection !== null && this.selection.parent !== null) {
+        var selection = this.selection;
         var node = new AstNode('placeholder');
-        this.selection.replaceWith(node);
-        this.render(node.parent);
-        this.select(node);
+        this.do(function () {
+            selection.replaceWith(node);
+            this.render(node.parent);
+            this.select(node);
+        }, function () {
+            node.replaceWith(selection);
+            this.render(selection.parent);
+            this.select(selection);
+        });
     }
 };
 
 Editor.prototype.backspace = function () {
-    if (this.selection !== null && this.selection.type === 'integer') {
+    if (this.selection !== null && this.selection.type === 'number') {
         this.selection.value = this.selection.value.slice(0, -1);
         if (this.selection.value === '') {
             var node = new AstNode('placeholder');
@@ -189,23 +244,21 @@ Editor.prototype.backspace = function () {
 
 Editor.prototype.number = function (char) {
     if (this.selection !== null && this.selection.parent !== null) {
-        if (this.selection !== null) {
-            var char = char.toString();
-            if (this.selection.type === 'number') {
-                if (char !== '.' || this.selection.value.indexOf('.') === -1) {
-                    this.selection.value += char;
-                    this.render(this.selection);
-                    this.select(this.selection);
-                }
-            } else {
-                if (char === '.') {
-                    char = '0.';
-                }
-                var node = new AstNode('number', char);
-                this.selection.replaceWith(node);
-                this.render(node.parent);
-                this.select(node);
+        var char = char.toString();
+        if (this.selection.type === 'number') {
+            if (char !== '.' || this.selection.value.indexOf('.') === -1) {
+                this.selection.value += char;
+                this.render(this.selection);
+                this.select(this.selection);
             }
+        } else {
+            if (char === '.') {
+                char = '0.';
+            }
+            var node = new AstNode('number', char);
+            this.selection.replaceWith(node);
+            this.render(node.parent);
+            this.select(node);
         }
     }
 };

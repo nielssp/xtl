@@ -95,9 +95,9 @@ var defaultLayout = function (matrix, cols, rows) {
     matrix[left][rows - 2] = input.Key.getIf(editor);
     matrix[left + 1][rows - 2] = input.Key.getLambda(editor);
     matrix[left + 2][rows - 2] = input.Key.getLet(editor);
-    
+
     if (editor.selection !== null && editor.selection.type === 'definition') {
-        matrix[cols -4][rows -1] = new input.Key('rename', null, function () {});
+        matrix[cols - 4][rows - 1] = new input.Key('rename', null, function () {});
     }
 };
 
@@ -107,6 +107,10 @@ var updateSize = function () {
     keymatrix.autoResize();
     editor.element.style.bottom = keymatrix.element.offsetHeight + 'px';
 };
+
+editor.on('select', function (event) {
+    keymatrix.update();
+});
 
 window.addEventListener('resize', updateSize);
 updateSize();

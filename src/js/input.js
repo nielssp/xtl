@@ -47,8 +47,6 @@ function KeyMatrix(editor, element) {
     this.defaultLayout = null;
 
     this.layout = null;
-
-    this.setSize(12, 3);
 }
 
 KeyMatrix.clear = function (keys) {
@@ -77,9 +75,6 @@ KeyMatrix.prototype.setSize = function (cols, rows) {
         }
         this.keys.push(column);
     }
-    if (this.layout !== null) {
-        this.layout(this.keys, this.cols, this.rows);
-    }
     this.update();
 };
 
@@ -96,7 +91,6 @@ KeyMatrix.prototype.setSize = function (cols, rows) {
  */
 KeyMatrix.prototype.setLayout = function (layout) {
     this.layout = layout;
-    layout(this.keys, this.cols, this.rows);
     this.update();
 };
 
@@ -115,6 +109,9 @@ KeyMatrix.prototype.autoResize = function () {
 };
 
 KeyMatrix.prototype.update = function () {
+    if (this.layout !== null) {
+        this.layout(this.keys, this.cols, this.rows);
+    }
     this.element.innerHTML = '';
     this.keys.forEach(function (column) {
         var colEl = document.createElement('div');
@@ -203,7 +200,7 @@ Key.getBackspace = function (editor) {
 
 Key.getUndo = function (editor) {
     return new Key('&#x21b6;', 'undo', function () {
-        alert('not implemented');
+        editor.undo();
     });
 };
 
