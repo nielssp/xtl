@@ -28,8 +28,7 @@ var Module = require('./Module');
 
 var program = new Module('program');
 
-var ast = new AstNode('constant-definition');
-ast.addChild(new AstNode('name', 'main'));
+var ast = new AstNode('constant-definition', 'main');
 var placeholder = new AstNode('placeholder');
 ast.addChild(placeholder);
 
@@ -85,12 +84,21 @@ var defaultLayout = function (matrix, cols, rows) {
     matrix[cols - 1][rows - 1] = input.Key.getRightArrow(editor);
 
     // TODO: find available methods based on editor.selection.typeAnnotation
-    
-    var i = 0;
+
+    var i = left;
+    var j = 0;
     if (editor.selection !== null && editor.selection.type === 'placeholder') {
-        for (symbol in editor.selection.symbols) {
-            if (!editor.selection.symbols.hasOwnProperty(symbol)) continue;
-            matrix[left][i++] = new input.Key.getName(editor, symbol);
+        for (var symbol in editor.selection.symbols) {
+            if (!editor.selection.symbols.hasOwnProperty(symbol))
+                continue;
+            matrix[i++][j] = new input.Key.getName(editor, symbol);
+            if (i > cols - 2) {
+                i = left;
+                j++;
+                if (j > rows - 3) {
+                    break;
+                }
+            }
         }
     }
 
@@ -103,19 +111,22 @@ var defaultLayout = function (matrix, cols, rows) {
             case 'function-definition':
             case 'constant-definition':
             case 'assign':
-                matrix[cols - 4][rows - 1] = new input.Key('rename', null, function () {
-                    alert('not implemented');
-                });
+            case 'parameter':
+            case 'typed-parameter':
+                matrix[cols - 4][rows - 1] = input.Key.getRename(editor);
+                break;
+            case 'parameters':
+            case 'typed-parameters':
+            case 'let-expression':
+                matrix[cols - 4][rows - 1] = input.Key.getAdd(editor);
                 break;
             case 'name':
-                if (editor.selection.parent.type !== 'parameters') {
-                    matrix[cols - 4][rows - 1] = new input.Key('find', 'definition', function () {
-                        var def = editor.selection.symbols[editor.selection.value];
-                        if (typeof def !== 'undefined') {
-                            editor.select(def);
-                        }
-                    });
-                }
+                matrix[cols - 4][rows - 1] = new input.Key('find', 'definition', function () {
+                    var def = editor.selection.symbols[editor.selection.value];
+                    if (typeof def !== 'undefined') {
+                        editor.select(def);
+                    }
+                });
                 break;
         }
     }
@@ -143,8 +154,9 @@ window.addEventListener('keydown', function (e) {
     }
     switch (key) {
         case 8:
-            e.preventDefault();
-            editor.backspace();
+            if (editor.backspace()) {
+                e.preventDefault();
+            }
             break;
         case 37:
             editor.left();

@@ -59,9 +59,9 @@ Editor.prototype.render = function (node) {
             el.appendChild(kw);
             var name = document.createElement('div');
             name.className = 'name';
-            name.innerHTML = node.children[0].value;
+            name.innerHTML = node.value;
             el.appendChild(name);
-            el.appendChild(this.render(node.children[1]));
+            el.appendChild(this.render(node.children[0]));
             break;
         case 'function-definition':
             el.className = 'function-definition';
@@ -71,23 +71,22 @@ Editor.prototype.render = function (node) {
             el.appendChild(kw);
             var name = document.createElement('div');
             name.className = 'name';
-            name.innerHTML = node.children[0].value;
-            if (node.children[1].children.length > 0) {
+            name.innerHTML = node.value;
+            if (node.children[0].children.length > 0) {
                 var sig = document.createElement('div');
                 sig.className = 'subexpression';
                 sig.appendChild(name);
-                node.children[1].children.forEach(function (child) {
+                node.children[0].children.forEach(function (child) {
                     sig.appendChild(this.render(child));
                 }, this);
                 el.appendChild(sig);
             } else {
                 el.appendChild(name);
             }
-            el.appendChild(this.render(node.children[2]));
+            el.appendChild(this.render(node.children[1]));
             break;
         case 'typed-paremeters':
         case 'parameters':
-        case 'assigns':
         case 'app-expression':
             el.className = node.type;
             node.children.forEach(function (child) {
@@ -99,11 +98,24 @@ Editor.prototype.render = function (node) {
             el.className = node.type;
             var name = document.createElement('div');
             name.className = 'name';
-            name.innerHTML = node.children[0].value;
+            name.innerHTML = node.value;
             el.appendChild(name);
-            el.appendChild(this.render(node.children[1]));
+            el.appendChild(this.render(node.children[0]));
             break;
         case 'let-expression':
+            el.className = node.type;
+            var kw = document.createElement('div');
+            kw.className = 'keyword';
+            kw.innerHTML = 'let';
+            el.appendChild(kw);
+            var assigns = document.createElement('div');
+            assigns.className = 'assigns';
+            node.children[0].children.forEach(function (assign) {
+                assigns.appendChild(this.render(assign));
+            }, this);
+            el.appendChild(assigns);
+            el.appendChild(this.render(node.children[1]));
+            break;
         case 'lambda-expression':
         case 'if-expression':
             el.className = node.type;
@@ -119,6 +131,7 @@ Editor.prototype.render = function (node) {
                 el.appendChild(this.render(child));
             }, this);
             break;
+        case 'parameter':
         case 'name':
             el.className = 'name';
             el.innerHTML = node.value;
@@ -142,8 +155,8 @@ Editor.prototype.render = function (node) {
             el.className = 'placeholder';
             break;
         default:
-            throw 'Undefined node type: ' + node.type;
-            
+            throw 'Undefined or unexpected node type: ' + node.type;
+
     }
     if (previous !== null && previous.parentNode !== null) {
         previous.parentNode.replaceChild(el, previous);
@@ -186,27 +199,27 @@ Editor.prototype.trigger = function (event) {
  * @param {AstNode} node
  */
 Editor.prototype.select = function (node) {
-    if (node === null) {
+    if (node === null || node.element === null) {
+        console.debug('Unselectable:', node);
         return false;
     }
+    console.debug('Select node:', node);
     if (this.selection !== null && this.selection.element !== null) {
         this.trigger({type: 'deselect', node: this.selection});
         this.selection.element.id = '';
     }
     this.selection = node;
-    if (this.selection.element !== null) {
-        this.selection.element.id = 'ast-selection';
-        var pos = 0;
-        var obj = this.selection.element;
-        if (obj.offsetParent) {
-            do {
-                pos += obj.offsetTop;
-            } while (obj = obj.offsetParent);
-            if (pos < this.element.scrollTop) {
-                this.element.scrollTop = pos - this.element.clientHeight / 2;
-            } else if (pos + 30 > this.element.scrollTop + this.element.clientHeight) {
-                this.element.scrollTop = pos - this.element.clientHeight / 2;
-            }
+    this.selection.element.id = 'ast-selection';
+    var pos = 0;
+    var obj = this.selection.element;
+    if (obj.offsetParent) {
+        do {
+            pos += obj.offsetTop;
+        } while (obj = obj.offsetParent);
+        if (pos < this.element.scrollTop) {
+            this.element.scrollTop = pos - this.element.clientHeight / 2;
+        } else if (pos + 30 > this.element.scrollTop + this.element.clientHeight) {
+            this.element.scrollTop = pos - this.element.clientHeight / 2;
         }
     }
     this.trigger({type: 'select', node: node});
@@ -218,6 +231,29 @@ Editor.prototype.do = function (apply, unapply) {
     apply.call(this);
 };
 
+Editor.prototype.editName = function (node, element, callback) {
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.value = node.value;
+    element.innerHTML = '';
+    element.appendChild(input);
+    input.focus();
+    var done = false;
+    var finish = function () {
+        if (!done) {
+            done = true;
+            input.parentNode.removeChild(input);
+            callback(input.value);
+        }
+    };
+    input.addEventListener('blur', finish);
+    input.addEventListener('keydown', function (e) {
+        if (e.keyCode === 13) {
+            finish();
+        }
+    });
+};
+
 Editor.prototype.undo = function () {
     var action = this.history.pop();
     if (typeof action !== 'undefined') {
@@ -227,42 +263,87 @@ Editor.prototype.undo = function () {
 
 Editor.prototype.up = function () {
     if (this.selection !== null) {
-        this.select(this.selection.parent);
+        var node = this.selection;
+        do {
+            node = node.parent;
+        } while (node !== null && !this.select(node));
     }
 };
 
 Editor.prototype.down = function () {
     if (this.selection !== null) {
-        var node = this.selection.getFirstChild();
-        this.select(node !== null ? node : this.selection.getNext());
+        var node = this.selection;
+        do {
+            node = node.getFirstChild();
+        } while (node !== null && !this.select(node));
     }
 };
 
 Editor.prototype.left = function () {
     if (this.selection !== null) {
-        this.select(this.selection.getPreviousDfs());
+        var node = this.selection;
+        do {
+            node = node.getPreviousDfs();
+        } while (node !== null && !this.select(node));
     }
 };
 
 Editor.prototype.right = function () {
     if (this.selection !== null) {
-        this.select(this.selection.getNextDfs());
+        var node = this.selection;
+        do {
+            node = node.getNextDfs();
+        } while (node !== null && !this.select(node));
     }
 };
 
 Editor.prototype.delete = function () {
-    if (this.selection !== null && this.selection.parent !== null) {
+    if (this.selection !== null && !this.selection.isFixed()) {
         var selection = this.selection;
-        var node = new AstNode('placeholder');
-        this.do(function () {
-            selection.replaceWith(node);
-            this.render(node.parent);
-            this.select(node);
-        }, function () {
-            node.replaceWith(selection);
-            this.render(selection.parent);
-            this.select(selection);
-        });
+        switch (selection.type) {
+            case 'assign':
+            case 'parameter':
+                var assigns = selection.parent;
+                var letExpression = assigns.parent;
+                var body = letExpression.children[1];
+                var index = assigns.indexOf(selection);
+                this.do(function () {
+                    assigns.removeChild(selection);
+                    if (assigns.children.length > 0) {
+                        this.render(letExpression);
+                        this.select(assigns.children[assigns.children.length - 1]);
+                    } else {
+                        letExpression.replaceWith(body);
+                        this.render(body.parent);
+                        this.select(body);
+                    }
+                }, function () {
+                    assigns.insert(index, selection);
+                    if (assigns.children.length > 1) {
+                        this.render(letExpression);
+                    } else {
+                        body.replaceWith(letExpression);
+                        body.parent = letExpression;
+                        this.render(letExpression.parent);
+                    }
+                    this.select(selection);
+                });
+                break;
+            case 'typed-parameter':
+                throw 'not implemented';
+            default:
+                var node = new AstNode('placeholder');
+                this.do(function () {
+                    selection.replaceWith(node);
+                    this.render(node.parent);
+                    this.select(node);
+                }, function () {
+                    node.replaceWith(selection);
+                    this.render(selection.parent);
+                    this.select(selection);
+                });
+                break;
+        }
     }
 };
 
@@ -278,11 +359,13 @@ Editor.prototype.backspace = function () {
             this.render(this.selection);
             this.select(this.selection);
         }
+        return true;
     }
+    return false;
 };
 
 Editor.prototype.number = function (char) {
-    if (this.selection !== null && this.selection.parent !== null) {
+    if (this.selection !== null && this.selection.isExpression()) {
         var char = char.toString();
         if (this.selection.type === 'number') {
             if (char !== '.' || this.selection.value.indexOf('.') === -1) {

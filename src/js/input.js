@@ -206,8 +206,8 @@ Key.getUndo = function (editor) {
 
 Key.getMethod = function (editor, method, parameters) {
     return new Key(method, null, function () {
-        if (editor.selection !== null && editor.selection.parent !== null) {
-            var node = new AstNode('expression');
+        if (editor.selection !== null && !editor.selection.isFixed()) {
+            var node = new AstNode('app-expression');
             var object = editor.selection;
             object.replaceWith(node);
             node.addChild(new AstNode('name', method));
@@ -229,7 +229,7 @@ Key.getMethod = function (editor, method, parameters) {
 
 Key.getIf = function (editor) {
     return new Key('if', 'conditional', function () {
-        if (editor.selection !== null && editor.selection.parent !== null) {
+        if (editor.selection !== null && editor.selection.isExpression()) {
             var node = new AstNode('if-expression');
             var condition = editor.selection;
             condition.replaceWith(node);
@@ -248,12 +248,12 @@ Key.getIf = function (editor) {
 
 Key.getLambda = function (editor) {
     return new Key('&lambda;', 'abstraction', function () {
-        if (editor.selection !== null && editor.selection.parent !== null) {
+        if (editor.selection !== null && editor.selection.isExpression()) {
             var node = new AstNode('lambda-expression');
             var expr = editor.selection;
             expr.replaceWith(node);
             var parameters = new AstNode('parameters');
-            parameters.addChild(new AstNode('name', 'x'));
+            parameters.addChild(new AstNode('parameter', expr.getNextFreeSymbol()));
             node.addChild(parameters);
             node.addChild(expr);
             editor.render(node.parent);
@@ -264,42 +264,120 @@ Key.getLambda = function (editor) {
 
 Key.getLet = function (editor) {
     return new Key('let', 'assignment', function () {
-        if (editor.selection !== null && editor.selection.parent !== null) {
+        if (editor.selection !== null && editor.selection.isExpression()) {
             var node = new AstNode('let-expression');
             var expr = editor.selection;
             expr.replaceWith(node);
             var assigns = new AstNode('assigns');
-            var assign = new AstNode('assign');
-            assign.addChild(new AstNode('name', 'x'));
+            var assign = new AstNode('assign', expr.getNextFreeSymbol());
             assign.addChild(new AstNode('placeholder'));
             assigns.addChild(assign);
             node.addChild(assigns);
             node.addChild(expr);
             editor.render(node.parent);
-            editor.select(assign.children[1]);
+            editor.select(assign.children[0]);
         }
     }, 'macro');
 };
 
 Key.getAssign = function (editor) {
     return new Key('=', 'assign', function () {
-        if (editor.selection !== null && editor.selection.parent !== null) {
-            var node = new AstNode('let-expression');
-            var expr = editor.selection;
-            expr.replaceWith(node);
-            var assigns = new AstNode('assigns');
-            var assign = new AstNode('assign');
-            assign.addChild(new AstNode('name', 'x'));
-            assign.addChild(expr);
-            assigns.addChild(assign);
-            node.addChild(assigns);
-            node.addChild(new AstNode('placeholder'));
-            node.updateSymbols();
-            editor.render(node.parent);
-            editor.select(node.children[1]);
+        if (editor.selection !== null && editor.selection.isExpression()) {
+            if (editor.selection.parent.type === 'let-expression') {
+                var placeholder = new AstNode('placeholder');
+                var expr = editor.selection;
+                var letExpr = expr.parent;
+                expr.replaceWith(placeholder);
+                var assign = new AstNode('assign', expr.getNextFreeSymbol());
+                assign.addChild(expr);
+                letExpr.children[0].addChild(assign);
+                editor.render(letExpr);
+                editor.select(placeholder);
+            } else {
+                var node = new AstNode('let-expression');
+                var expr = editor.selection;
+                expr.replaceWith(node);
+                var assigns = new AstNode('assigns');
+                var assign = new AstNode('assign', expr.getNextFreeSymbol());
+                assign.addChild(expr);
+                assigns.addChild(assign);
+                node.addChild(assigns);
+                node.addChild(new AstNode('placeholder'));
+                node.updateSymbols();
+                editor.render(node.parent);
+                editor.select(node.children[1]);
+            }
         }
     });
 };
+
+Key.getAdd = function (editor) {
+    return new Key('*', 'add', function () {
+        if (editor.selection !== null) {
+            switch (editor.selection.type) {
+                case 'parameters':
+                    var parameter = new AstNode('parameter', editor.selection.getNextFreeSymbol());
+                    editor.selection.addChild(parameter);
+                    editor.render(editor.selection.parent);
+                    editor.select(parameter);
+                    break;
+                case 'typed-parameters':
+                    throw 'not implemented';
+                    break;
+                case 'let-expression':
+                    var assign = new AstNode('assign', editor.selection.getNextFreeSymbol());
+                    var placeholder = new AstNode('placeholder');
+                    assign.addChild(placeholder);
+                    editor.selection.children[0].addChild(assign);
+                    editor.render(editor.selection);
+                    editor.select(placeholder);
+                    break;
+            }
+        }
+    });
+};
+
+Key.getRename = function (editor) {
+    return new Key('_', 'rename', function () {
+        if (editor.selection !== null) {
+            switch (editor.selection.type) {
+                case 'assign':
+                    var node = editor.selection;
+                    editor.editName(node, node.element.firstChild, function (newName) {
+                        var oldName = node.value;
+                        node.value = newName;
+                        node.parent.parent.substitute(oldName, newName);
+                        editor.render(node.parent.parent);
+                    });
+                    break;
+                case 'parameter':
+                    var node = editor.selection;
+                    editor.editName(node, node.element, function (newName) {
+                        var oldName = node.value;
+                        node.value = newName;
+                        node.parent.parent.substitute(oldName, newName);
+                        editor.render(node.parent.parent);
+                    });
+                    break;
+                case 'typed-parameter':
+                    // TODO: implement
+                    throw 'not implemented';
+                    break;
+                case 'constant-definition':
+                case 'function-definition':
+                    var node = editor.selection;
+                    editor.editName(node, node.element.childNodes[1], function (newName) {
+                        var oldName = node.value;
+                        node.value = newName;
+                        // TODO: substitute in module
+                        node.substitute(oldName, newName);
+                        editor.render(node);
+                    });
+                    break;
+            }
+        }
+    });
+}
 
 Key.prototype.render = function () {
     var el = document.createElement('button');

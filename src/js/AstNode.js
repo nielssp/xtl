@@ -91,8 +91,9 @@ AstNode.prototype.trigger = function (event) {
  */
 AstNode.prototype.replace = function (child, replacement) {
     this.children[this.children.indexOf(child)] = replacement;
+    replacement.detach();
+    child.detach();
     replacement.parent = this;
-    child.parent = null;
 };
 
 /**
@@ -101,20 +102,62 @@ AstNode.prototype.replace = function (child, replacement) {
  * @param {AstNode} node
  */
 AstNode.prototype.addChild = function (node) {
+    node.detach();
     node.parent = this;
     this.children.push(node);
 };
+
+AstNode.prototype.removeChild = function (node) {
+    var index = this.children.indexOf(node);
+    if (index >= 0) {
+        this.children.splice(index, 1);
+        node.parent = null;
+    }
+};
+
+AstNode.prototype.indexOf = function (node) {
+    return this.children.indexOf(node);
+};
+
+AstNode.prototype.nodeAt = function (index) {
+    return this.children[index];
+};
+
+AstNode.prototype.insert = function (index, node) {
+    node.detach();
+    node.parent = this;
+    this.children = this.children.slice(0, index).concat(
+        node,
+        this.children.slice(index)
+    );
+};
+
+AstNode.prototype.detach = function () {
+    if (this.parent !== null) {
+        this.parent.removeChild(this);
+        this.parent = null;
+    }
+};
+
+function extend(obj, extension) {
+    for (var key in extension) {
+        if (extension.hasOwnProperty(key)) {
+            obj[key] = extension[key];
+        }
+    }
+    return obj;
+}
 
 AstNode.prototype.updateSymbols = function () {
     if (this.parent === null) {
         this.symbols = {};
     } else {
-        this.symbols = this.parent.symbols;
+        this.symbols = extend({}, this.parent.symbols);
     }
     switch (this.type) {
         case 'let-expression':
             this.children[0].children.forEach(function (assignment) {
-                this.symbols[assignment.children[0].value] = assignment;
+                this.symbols[assignment.value] = assignment;
             }, this);
             break;
         case 'lambda-expression':
@@ -124,13 +167,82 @@ AstNode.prototype.updateSymbols = function () {
             break;
         case 'function-definition':
             this.children[1].children.forEach(function (typedParameter) {
-                this.symbols[typedParameter.children[0].value] = typedParameter;
+                this.symbols[typedParameter.value] = typedParameter;
             }, this);
             break;
     }
     this.children.forEach(function (node) {
         node.updateSymbols();
     });
+};
+
+AstNode.prototype.getNextFreeSymbol = function () {
+    var name = 'a';
+    while (this.symbols.hasOwnProperty(name)) {
+        var code = name.charCodeAt(name.length - 1) + 1;
+        if (code <= 122) {
+            name = name.slice(0, name.length - 1) + String.fromCharCode(code);
+        } else {
+            throw 'not implemented';
+        }
+    }
+    return name;
+};
+
+AstNode.prototype.substitute = function (symbol, substitution) {
+    switch (this.type) {
+        case 'name':
+            if (this.value === symbol) {
+                this.value = substitution;
+            }
+            break;
+        case 'let-expression':
+        case 'lambda-expression':
+            if (this.children[0].children.some(function (parameter) {
+                return parameter.value === symbol;
+            })) {
+                return;
+            }
+            break;
+        case 'function-definition':
+            if (this.children[1].children.some(function (parameter) {
+                return parameter.value === symbol;
+            })) {
+                return;
+            }
+            break;
+    }
+    this.children.forEach(function (node) {
+        node.substitute(symbol, substitution);
+    });
+};
+
+AstNode.prototype.isExpression = function () {
+    switch (this.type) {
+        case 'let-expression':
+        case 'if-expression':
+        case 'lambda-expression':
+        case 'app-expression':
+        case 'name':
+        case 'number':
+        case 'string':
+        case 'placeholder':
+            return true;
+    }
+    return false;
+};
+
+AstNode.prototype.isFixed = function () {
+    if (this.parent === null) {
+        return true;
+    }
+    switch (this.type) {
+        case 'typed-parameters':
+        case 'parameters':
+        case 'assigns':
+            return true;
+    }
+    return false;
 };
 
 /**
