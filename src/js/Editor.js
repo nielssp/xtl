@@ -269,7 +269,7 @@ Editor.prototype.editName = function (node, element, callback) {
     var finish = function () {
         if (!done) {
             done = true;
-            this.trigger({type: 'input-inactive'});
+            _this.trigger({type: 'input-inactive'});
             _this.inputActive = false;
             input.parentNode.removeChild(input);
             fakeInput.parentNode.removeChild(fakeInput);
