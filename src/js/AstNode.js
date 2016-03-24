@@ -61,6 +61,8 @@ function AstNode(type, value) {
     this.children = [];
 
     this.handlers = {};
+    
+    this.symbols = {};
 }
 
 AstNode.prototype.on = function (name, handler) {
@@ -94,6 +96,44 @@ AstNode.prototype.replace = function (child, replacement) {
 };
 
 /**
+ * Add a child node.
+ * 
+ * @param {AstNode} node
+ */
+AstNode.prototype.addChild = function (node) {
+    node.parent = this;
+    this.children.push(node);
+};
+
+AstNode.prototype.updateSymbols = function () {
+    if (this.parent === null) {
+        this.symbols = {};
+    } else {
+        this.symbols = this.parent.symbols;
+    }
+    switch (this.type) {
+        case 'let-expression':
+            this.children[0].children.forEach(function (assignment) {
+                this.symbols[assignment.children[0].value] = assignment;
+            }, this);
+            break;
+        case 'lambda-expression':
+            this.children[0].children.forEach(function (parameter) {
+                this.symbols[parameter.value] = parameter;
+            }, this);
+            break;
+        case 'function-definition':
+            this.children[1].children.forEach(function (typedParameter) {
+                this.symbols[typedParameter.children[0].value] = typedParameter;
+            }, this);
+            break;
+    }
+    this.children.forEach(function (node) {
+        node.updateSymbols();
+    });
+};
+
+/**
  * Replace this node with another node.
  * 
  * @param {AstNode} node
@@ -102,17 +142,6 @@ AstNode.prototype.replaceWith = function (node) {
     if (this.parent !== null) {
         this.parent.replace(this, node);
     }
-};
-
-
-/**
- * Add a child node.
- * 
- * @param {AstNode} node
- */
-AstNode.prototype.addChild = function (node) {
-    node.parent = this;
-    this.children.push(node);
 };
 
 /**

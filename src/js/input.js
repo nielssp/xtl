@@ -178,12 +178,12 @@ Key.getNumber = function (editor, value, help) {
 Key.getName = function (editor, name) {
     return new Key(name, null, function () {
         if (editor.selection !== null && editor.selection.parent !== null) {
-            var node = new AstNode('id', name);
+            var node = new AstNode('name', name);
             editor.selection.replaceWith(node);
             editor.render(node.parent);
             editor.select(node);
         }
-    }, 'id');
+    }, 'name');
 };
 
 Key.getDelete = function (editor) {
@@ -210,7 +210,7 @@ Key.getMethod = function (editor, method, parameters) {
             var node = new AstNode('expression');
             var object = editor.selection;
             object.replaceWith(node);
-            node.addChild(new AstNode('id', method));
+            node.addChild(new AstNode('name', method));
             node.addChild(object);
             for (var i = 0; i < parameters; i++) {
                 node.addChild(new AstNode('placeholder'));
@@ -230,7 +230,7 @@ Key.getMethod = function (editor, method, parameters) {
 Key.getIf = function (editor) {
     return new Key('if', 'conditional', function () {
         if (editor.selection !== null && editor.selection.parent !== null) {
-            var node = new AstNode('macro', 'if');
+            var node = new AstNode('if-expression');
             var condition = editor.selection;
             condition.replaceWith(node);
             node.addChild(condition);
@@ -249,11 +249,11 @@ Key.getIf = function (editor) {
 Key.getLambda = function (editor) {
     return new Key('&lambda;', 'abstraction', function () {
         if (editor.selection !== null && editor.selection.parent !== null) {
-            var node = new AstNode('macro', '&lambda;');
+            var node = new AstNode('lambda-expression');
             var expr = editor.selection;
             expr.replaceWith(node);
             var parameters = new AstNode('parameters');
-            parameters.addChild(new AstNode('id', 'x'));
+            parameters.addChild(new AstNode('name', 'x'));
             node.addChild(parameters);
             node.addChild(expr);
             editor.render(node.parent);
@@ -265,25 +265,39 @@ Key.getLambda = function (editor) {
 Key.getLet = function (editor) {
     return new Key('let', 'assignment', function () {
         if (editor.selection !== null && editor.selection.parent !== null) {
-            var node = new AstNode('macro', 'let');
+            var node = new AstNode('let-expression');
             var expr = editor.selection;
             expr.replaceWith(node);
-            var parameters = new AstNode('parameters');
-            node.addChild(parameters);
+            var assigns = new AstNode('assigns');
+            var assign = new AstNode('assign');
+            assign.addChild(new AstNode('name', 'x'));
+            assign.addChild(new AstNode('placeholder'));
+            assigns.addChild(assign);
+            node.addChild(assigns);
             node.addChild(expr);
             editor.render(node.parent);
-            if (node.children[1].type === 'placeholder') {
-                editor.select(node.children[0]);
-            } else {
-                editor.select(node.children[1]);
-            }
+            editor.select(assign.children[1]);
         }
     }, 'macro');
 };
 
 Key.getAssign = function (editor) {
     return new Key('=', 'assign', function () {
-        alert('not implemented');
+        if (editor.selection !== null && editor.selection.parent !== null) {
+            var node = new AstNode('let-expression');
+            var expr = editor.selection;
+            expr.replaceWith(node);
+            var assigns = new AstNode('assigns');
+            var assign = new AstNode('assign');
+            assign.addChild(new AstNode('name', 'x'));
+            assign.addChild(expr);
+            assigns.addChild(assign);
+            node.addChild(assigns);
+            node.addChild(new AstNode('placeholder'));
+            node.updateSymbols();
+            editor.render(node.parent);
+            editor.select(node.children[1]);
+        }
     });
 };
 

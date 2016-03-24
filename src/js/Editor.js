@@ -46,18 +46,31 @@ Editor.prototype.setRoot = function (node) {
  * @returns {Element}
  */
 Editor.prototype.render = function (node) {
+    node.updateSymbols();
     var el = document.createElement('div');
     var previous = node.element;
     node.element = el;
     switch (node.type) {
-        case 'definition':
+        case 'constant-definition':
             el.className = 'function-definition';
             var kw = document.createElement('div');
             kw.className = 'keyword';
             kw.innerHTML = 'define';
             el.appendChild(kw);
             var name = document.createElement('div');
-            name.className = 'id';
+            name.className = 'name';
+            name.innerHTML = node.children[0].value;
+            el.appendChild(name);
+            el.appendChild(this.render(node.children[1]));
+            break;
+        case 'function-definition':
+            el.className = 'function-definition';
+            var kw = document.createElement('div');
+            kw.className = 'keyword';
+            kw.innerHTML = 'define';
+            el.appendChild(kw);
+            var name = document.createElement('div');
+            name.className = 'name';
             name.innerHTML = node.children[0].value;
             if (node.children[1].children.length > 0) {
                 var sig = document.createElement('div');
@@ -72,24 +85,55 @@ Editor.prototype.render = function (node) {
             }
             el.appendChild(this.render(node.children[2]));
             break;
+        case 'typed-paremeters':
         case 'parameters':
-            el.className = 'subexpression';
+        case 'assigns':
+        case 'app-expression':
+            el.className = node.type;
             node.children.forEach(function (child) {
                 el.appendChild(this.render(child));
             }, this);
             break;
-        case 'macro':
-            el.className = 'expression';
+        case 'assign':
+        case 'typed-parameter':
+            el.className = node.type;
+            var name = document.createElement('div');
+            name.className = 'name';
+            name.innerHTML = node.children[0].value;
+            el.appendChild(name);
+            el.appendChild(this.render(node.children[1]));
+            break;
+        case 'let-expression':
+        case 'lambda-expression':
+        case 'if-expression':
+            el.className = node.type;
             var kw = document.createElement('div');
             kw.className = 'keyword';
-            kw.innerHTML = node.value;
+            if (node.type === 'lambda-expression') {
+                kw.innerHTML = '&lambda;';
+            } else {
+                kw.innerHTML = node.type.match(/^([^-]+)-/)[1];
+            }
             el.appendChild(kw);
             node.children.forEach(function (child) {
                 el.appendChild(this.render(child));
             }, this);
             break;
-        case 'expression':
-            el.className = 'expression';
+        case 'name':
+            el.className = 'name';
+            el.innerHTML = node.value;
+            break;
+        case 'number':
+            el.className = 'literal';
+            el.innerHTML = node.value;
+            break;
+        case 'string':
+            el.className = 'literal';
+            el.innerHTML = '"' + node.value + '"';
+            break;
+        case 'function-type':
+        case 'applied-type':
+            el.className = node.type;
             node.children.forEach(function (child) {
                 el.appendChild(this.render(child));
             }, this);
@@ -97,14 +141,9 @@ Editor.prototype.render = function (node) {
         case 'placeholder':
             el.className = 'placeholder';
             break;
-        case 'id':
-            el.className = 'id';
-            el.innerHTML = node.value;
-            break;
-        case 'number':
-            el.className = 'literal';
-            el.innerHTML = node.value;
-            break;
+        default:
+            throw 'Undefined node type: ' + node.type;
+            
     }
     if (previous !== null && previous.parentNode !== null) {
         previous.parentNode.replaceChild(el, previous);
