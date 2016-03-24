@@ -177,7 +177,7 @@ Key.getNumber = function (editor, value, help) {
 
 Key.getName = function (editor, name) {
     return new Key(name, null, function () {
-        if (editor.selection !== null && editor.selection.parent !== null) {
+        if (editor.selection !== null && editor.selection.isExpression()) {
             var node = new AstNode('name', name);
             editor.selection.replaceWith(node);
             editor.render(node.parent);
@@ -206,7 +206,7 @@ Key.getUndo = function (editor) {
 
 Key.getMethod = function (editor, method, parameters) {
     return new Key(method, null, function () {
-        if (editor.selection !== null && !editor.selection.isFixed()) {
+        if (editor.selection !== null && editor.selection.isExpression()) {
             var node = new AstNode('app-expression');
             var object = editor.selection;
             object.replaceWith(node);
@@ -312,7 +312,7 @@ Key.getAssign = function (editor) {
 };
 
 Key.getAdd = function (editor) {
-    return new Key('*', 'add', function () {
+    return new Key('+', 'add', function () {
         if (editor.selection !== null) {
             switch (editor.selection.type) {
                 case 'parameters':

@@ -32,6 +32,8 @@ function Editor(element) {
 
     this.history = [];
 
+    this.undoHistory = [];
+
     this.handlers = {};
 }
 
@@ -48,6 +50,9 @@ Editor.prototype.setRoot = function (node) {
 Editor.prototype.render = function (node) {
     node.updateSymbols();
     var el = document.createElement('div');
+    if (this.selection === node) {
+        el.id = 'ast-selection';
+    }
     var previous = node.element;
     node.element = el;
     switch (node.type) {
@@ -205,6 +210,12 @@ Editor.prototype.select = function (node) {
     }
     console.debug('Select node:', node);
     if (this.selection !== null && this.selection.element !== null) {
+        if (this.selection.type === 'number') {
+            if (this.selection.value[this.selection.value.length - 1] === '.') {
+                this.selection.value = this.selection.value.slice(0, this.selection.value.length - 1);
+                this.render(this.selection);
+            }
+        }
         this.trigger({type: 'deselect', node: this.selection});
         this.selection.element.id = '';
     }
@@ -228,6 +239,7 @@ Editor.prototype.select = function (node) {
 
 Editor.prototype.do = function (apply, unapply) {
     this.history.push({apply: apply, unapply: unapply});
+    this.undoHistory = [];
     apply.call(this);
 };
 
@@ -258,6 +270,15 @@ Editor.prototype.undo = function () {
     var action = this.history.pop();
     if (typeof action !== 'undefined') {
         action.unapply.call(this);
+        this.undoHistory.push(action);
+    }
+};
+
+Editor.prototype.redo = function () {
+    var action = this.undoHistory.pop();
+    if (typeof action !== 'undefined') {
+        action.apply.call(this);
+        this.history.push(action);
     }
 };
 
@@ -323,6 +344,7 @@ Editor.prototype.delete = function () {
                         this.render(letExpression);
                     } else {
                         body.replaceWith(letExpression);
+                        letExpression.addChild(body);
                         body.parent = letExpression;
                         this.render(letExpression.parent);
                     }
@@ -357,7 +379,6 @@ Editor.prototype.backspace = function () {
             this.select(node);
         } else {
             this.render(this.selection);
-            this.select(this.selection);
         }
         return true;
     }
@@ -366,21 +387,27 @@ Editor.prototype.backspace = function () {
 
 Editor.prototype.number = function (char) {
     if (this.selection !== null && this.selection.isExpression()) {
-        var char = char.toString();
+        char = char.toString();
         if (this.selection.type === 'number') {
             if (char !== '.' || this.selection.value.indexOf('.') === -1) {
                 this.selection.value += char;
                 this.render(this.selection);
-                this.select(this.selection);
             }
         } else {
+            var selection = this.selection;
             if (char === '.') {
                 char = '0.';
             }
             var node = new AstNode('number', char);
-            this.selection.replaceWith(node);
-            this.render(node.parent);
-            this.select(node);
+            this.do(function () {
+                selection.replaceWith(node);
+                this.render(node.parent);
+                this.select(node);
+            }, function () {
+                node.replaceWith(selection);
+                this.render(selection.parent);
+                this.select(selection);
+            });
         }
     }
 };

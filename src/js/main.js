@@ -152,29 +152,43 @@ window.addEventListener('keydown', function (e) {
         editor.number(key - 48);
         return;
     }
-    switch (key) {
-        case 8:
-            if (editor.backspace()) {
-                e.preventDefault();
-            }
-            break;
-        case 37:
-            editor.left();
-            break;
-        case 38:
-            editor.up();
-            break;
-        case 39:
-            editor.right();
-            break;
-        case 40:
-            editor.down();
-            break;
-        case 46:
-            editor.delete();
-            break;
-        case 190:
-            editor.number('.');
-            break;
+    if (e.ctrlKey && e.shiftKey) {
+        switch (key) {
+            case 90:
+                editor.redo();
+                break;
+        }
+    } else if (e.ctrlKey) {
+        switch (key) {
+            case 90:
+                editor.undo();
+                break;
+        }
+    } else {
+        switch (key) {
+            case 8:
+                if (editor.backspace()) {
+                    e.preventDefault();
+                }
+                break;
+            case 37:
+                editor.left();
+                break;
+            case 38:
+                editor.up();
+                break;
+            case 39:
+                editor.right();
+                break;
+            case 40:
+                editor.down();
+                break;
+            case 46:
+                editor.delete();
+                break;
+            case 190:
+                editor.number('.');
+                break;
+        }
     }
 });

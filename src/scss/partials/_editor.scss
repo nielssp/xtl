@@ -43,6 +43,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     right: 0;
     bottom: (55px + 4) * 3 + 8px;
     overflow: auto;
+    
+    input[type=text] {
+        font-size: inherit;
+        font-family: inherit;
+        border: 0;
+        background-color: #ddd;
+        outline: none;
+    }
 
     .function-definition, .let-expression, .lambda-expression, .if-expression, .assign {
         @include sexpr;
