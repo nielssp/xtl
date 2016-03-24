@@ -29,6 +29,8 @@ function Editor(element) {
      * @type {AstNode}
      */
     this.selection = null;
+    
+    this.inputActive = false;
 
     this.history = [];
 
@@ -64,7 +66,7 @@ Editor.prototype.render = function (node) {
             el.appendChild(kw);
             var name = document.createElement('div');
             name.className = 'name';
-            name.innerHTML = node.value;
+            name.textContent = node.value;
             el.appendChild(name);
             el.appendChild(this.render(node.children[0]));
             break;
@@ -76,7 +78,7 @@ Editor.prototype.render = function (node) {
             el.appendChild(kw);
             var name = document.createElement('div');
             name.className = 'name';
-            name.innerHTML = node.value;
+            name.textContent = node.value;
             if (node.children[0].children.length > 0) {
                 var sig = document.createElement('div');
                 sig.className = 'subexpression';
@@ -103,7 +105,7 @@ Editor.prototype.render = function (node) {
             el.className = node.type;
             var name = document.createElement('div');
             name.className = 'name';
-            name.innerHTML = node.value;
+            name.textContent = node.value;
             el.appendChild(name);
             el.appendChild(this.render(node.children[0]));
             break;
@@ -139,15 +141,15 @@ Editor.prototype.render = function (node) {
         case 'parameter':
         case 'name':
             el.className = 'name';
-            el.innerHTML = node.value;
+            el.textContent = node.value;
             break;
         case 'number':
             el.className = 'literal';
-            el.innerHTML = node.value;
+            el.textContent = node.value;
             break;
         case 'string':
             el.className = 'literal';
-            el.innerHTML = '"' + node.value + '"';
+            el.textContent = '"' + node.value + '"';
             break;
         case 'function-type':
         case 'applied-type':
@@ -204,6 +206,10 @@ Editor.prototype.trigger = function (event) {
  * @param {AstNode} node
  */
 Editor.prototype.select = function (node) {
+    if (this.inputActive) {
+        console.debug('input active');
+        return true;
+    }
     if (node === null || node.element === null) {
         console.debug('Unselectable:', node);
         return false;
@@ -244,21 +250,39 @@ Editor.prototype.do = function (apply, unapply) {
 };
 
 Editor.prototype.editName = function (node, element, callback) {
+    this.inputActive = true;
+    this.trigger({type: 'input-active'});
     var input = document.createElement('input');
     input.type = 'text';
     input.value = node.value;
+    var fakeInput = document.createElement('span');
+    fakeInput.className = 'fake-input';
     element.innerHTML = '';
     element.appendChild(input);
+    element.appendChild(fakeInput);
+    fakeInput.textContent = input.value;
+    input.style.width = fakeInput.getBoundingClientRect().width + "px";
+    fakeInput.style.display = 'none';
     input.focus();
     var done = false;
+    var _this = this;
     var finish = function () {
         if (!done) {
             done = true;
+            this.trigger({type: 'input-inactive'});
+            _this.inputActive = false;
             input.parentNode.removeChild(input);
+            fakeInput.parentNode.removeChild(fakeInput);
             callback(input.value);
         }
     };
     input.addEventListener('blur', finish);
+    input.addEventListener('input', function (e) {
+        fakeInput.textContent = input.value;
+        fakeInput.style.display = 'inline';
+        input.style.width = fakeInput.getBoundingClientRect().width + "px";
+        fakeInput.style.display = 'none';
+    });
     input.addEventListener('keydown', function (e) {
         if (e.keyCode === 13) {
             finish();

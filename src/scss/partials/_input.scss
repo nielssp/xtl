@@ -18,10 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #keymatrix {
     padding: 0 2px;
-    position: absolute;
+    position: fixed;
     bottom: 0;
     width: 100%;
     background-color: #333;
+    
+    &.hide {
+        opacity: 0.5;
+    }
+    
     button {
         background-color: #404040;
         color: #eee;
