@@ -137,11 +137,21 @@ keymatrix.defaultLayout = defaultLayout;
 var updateSize = function () {
     keymatrix.autoResize();
     editor.element.style.bottom = keymatrix.element.offsetHeight + 'px';
+    editor.bringIntoView(editor.selection);
 };
 
 editor.on('select', function (event) {
     keymatrix.update();
 });
+
+editor.on('input-active', function (event) {
+    keymatrix.element.style.display = 'none';
+});
+
+editor.on('input-inactive', function (event) {
+    keymatrix.element.style.display = 'block';
+});
+
 
 window.addEventListener('resize', updateSize);
 updateSize();

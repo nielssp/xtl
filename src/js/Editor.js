@@ -29,7 +29,7 @@ function Editor(element) {
      * @type {AstNode}
      */
     this.selection = null;
-    
+
     this.inputActive = false;
 
     this.history = [];
@@ -201,6 +201,24 @@ Editor.prototype.trigger = function (event) {
     return true;
 };
 
+Editor.prototype.bringIntoView = function (node) {
+    if (node.element === null) {
+        return false;
+    }
+    var pos = 0;
+    var obj = node.element;
+    if (obj.offsetParent) {
+        do {
+            pos += obj.offsetTop;
+        } while (obj = obj.offsetParent);
+        if (pos < this.element.scrollTop) {
+            this.element.scrollTop = pos - this.element.clientHeight / 2;
+        } else if (pos + 30 > this.element.scrollTop + this.element.clientHeight) {
+            this.element.scrollTop = pos - this.element.clientHeight / 2;
+        }
+    }
+}
+
 /**
  * 
  * @param {AstNode} node
@@ -227,26 +245,9 @@ Editor.prototype.select = function (node) {
     }
     this.selection = node;
     this.selection.element.id = 'ast-selection';
-    var pos = 0;
-    var obj = this.selection.element;
-    if (obj.offsetParent) {
-        do {
-            pos += obj.offsetTop;
-        } while (obj = obj.offsetParent);
-        if (pos < this.element.scrollTop) {
-            this.element.scrollTop = pos - this.element.clientHeight / 2;
-        } else if (pos + 30 > this.element.scrollTop + this.element.clientHeight) {
-            this.element.scrollTop = pos - this.element.clientHeight / 2;
-        }
-    }
+    this.bringIntoView(this.selection);
     this.trigger({type: 'select', node: node});
     return true;
-};
-
-Editor.prototype.do = function (apply, unapply) {
-    this.history.push({apply: apply, unapply: unapply});
-    this.undoHistory = [];
-    apply.call(this);
 };
 
 Editor.prototype.editName = function (node, element, callback) {
@@ -288,6 +289,12 @@ Editor.prototype.editName = function (node, element, callback) {
             finish();
         }
     });
+};
+
+Editor.prototype.do = function (apply, unapply) {
+    this.history.push({apply: apply, unapply: unapply});
+    this.undoHistory = [];
+    apply.call(this);
 };
 
 Editor.prototype.undo = function () {

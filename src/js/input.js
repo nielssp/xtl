@@ -96,6 +96,11 @@ KeyMatrix.prototype.setLayout = function (layout) {
 
 KeyMatrix.prototype.autoResize = function () {
     var rows = 3;
+    if (window.innerHeight < 300) {
+        this.element.style.display = 'none';
+        return;
+    }
+    this.element.style.display = 'block';
     if (window.innerHeight >= 480) {
         rows = 4;
     }
