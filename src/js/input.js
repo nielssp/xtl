@@ -412,6 +412,12 @@ Key.prototype.render = function () {
         helpEl.innerHTML = this.help;
         el.appendChild(helpEl);
     }
-    el.addEventListener('click', this.action);
+    var action = this.action;
+    el.addEventListener('click', function () {
+        if (window.navigator && window.navigator.vibrate) {
+            window.navigator.vibrate(30);
+        }
+        action();
+    });
     return el;
 };

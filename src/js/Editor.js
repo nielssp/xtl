@@ -219,7 +219,7 @@ Editor.prototype.bringIntoView = function (node) {
             this.element.scrollTop = pos - this.element.clientHeight / 2;
         }
     }
-}
+};
 
 /**
  * 
