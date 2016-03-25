@@ -149,7 +149,9 @@ Editor.prototype.render = function (node) {
             break;
         case 'string':
             el.className = 'literal';
-            el.textContent = '"' + node.value + '"';
+            var string = node.value.replace(/\\/g, '\\\\')
+                    .replace(/"/g, '\\"');
+            el.textContent = '"' + string + '"';
             break;
         case 'function-type':
         case 'applied-type':
@@ -349,6 +351,24 @@ Editor.prototype.right = function () {
     }
 };
 
+Editor.prototype.previousPlaceholder = function () {
+    if (this.selection !== null) {
+        var node = this.selection;
+        do {
+            node = node.getPreviousDfs();
+        } while (node !== null && (node.type !== 'placeholder' || !this.select(node)));
+    }
+};
+
+Editor.prototype.nextPlaceholder = function () {
+    if (this.selection !== null) {
+        var node = this.selection;
+        do {
+            node = node.getNextDfs();
+        } while (node !== null && (node.type !== 'placeholder' || !this.select(node)));
+    }
+};
+
 Editor.prototype.delete = function () {
     if (this.selection !== null && !this.selection.isFixed()) {
         var selection = this.selection;
@@ -434,6 +454,36 @@ Editor.prototype.number = function (char) {
                 selection.replaceWith(node);
                 this.render(node.parent);
                 this.select(node);
+            }, function () {
+                node.replaceWith(selection);
+                this.render(selection.parent);
+                this.select(selection);
+            });
+        }
+    }
+};
+
+Editor.prototype.string = function () {
+    if (this.selection !== null && this.selection.isExpression()) {
+        if (this.selection.type === 'string') {
+            var _this = this;
+            var node = this.selection;
+            this.editName(node, node.element, function (value) {
+                node.value = value;
+                _this.render(node);
+            });
+        } else {
+            var selection = this.selection;
+            var node = new AstNode('string', '');
+            this.do(function () {
+                selection.replaceWith(node);
+                this.render(node.parent);
+                this.select(node);
+                var _this = this;
+                this.editName(node, node.element, function (value) {
+                    node.value = value;
+                    _this.render(node);
+                });
             }, function () {
                 node.replaceWith(selection);
                 this.render(selection.parent);

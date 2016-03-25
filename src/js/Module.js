@@ -17,10 +17,25 @@
 
 module.exports = Module;
 
+/**
+ * 
+ * @class
+ * @param {string} name
+ */
 function Module(name) {
     this.name = name;
 
     this.imports = [];
 
     this.members = {};
+    
+    this.types = {};
 }
+
+Module.prototype.define = function (name, node) {
+    this.members[name] = node;
+};
+
+Module.prototype.defineType = function (name, node) {
+    this.types[name] = node;
+};

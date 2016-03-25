@@ -180,13 +180,26 @@ Key.getNumber = function (editor, value, help) {
     }, 'literal');
 };
 
+Key.getString = function (editor) {
+    return new Key('"abc"', 'string', function () {
+        editor.string();
+    }, 'literal');
+}
+
 Key.getName = function (editor, name) {
     return new Key(name, null, function () {
         if (editor.selection !== null && editor.selection.isExpression()) {
+            var selection = editor.selection;
             var node = new AstNode('name', name);
-            editor.selection.replaceWith(node);
-            editor.render(node.parent);
-            editor.select(node);
+            editor.do(function () {
+                selection.replaceWith(node);
+                editor.render(node.parent);
+                editor.select(node);
+            }, function () {
+                node.replaceWith(selection);
+                editor.render(selection.parent);
+                editor.select(selection);
+            });
         }
     }, 'name');
 };
@@ -248,7 +261,7 @@ Key.getIf = function (editor) {
                 editor.select(node.children[1]);
             }
         }
-    }, 'macro');
+    }, 'keyword');
 };
 
 Key.getLambda = function (editor) {
@@ -264,7 +277,7 @@ Key.getLambda = function (editor) {
             editor.render(node.parent);
             editor.select(node.children[1]);
         }
-    }, 'macro');
+    }, 'keyword');
 };
 
 Key.getLet = function (editor) {
@@ -282,7 +295,7 @@ Key.getLet = function (editor) {
             editor.render(node.parent);
             editor.select(assign.children[0]);
         }
-    }, 'macro');
+    }, 'keyword');
 };
 
 Key.getAssign = function (editor) {

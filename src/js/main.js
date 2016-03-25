@@ -32,7 +32,7 @@ var ast = new AstNode('constant-definition', 'main');
 var placeholder = new AstNode('placeholder');
 ast.addChild(placeholder);
 
-program.members.main = ast;
+program.define('main', ast);
 
 var editor = new Editor(document.getElementById('editor'));
 editor.setRoot(ast);
@@ -128,6 +128,9 @@ var defaultLayout = function (matrix, cols, rows) {
                     }
                 });
                 break;
+            default:
+                matrix[cols - 4][rows - 1] = input.Key.getString(editor);
+                break;
         }
     }
 };
@@ -143,15 +146,6 @@ var updateSize = function () {
 editor.on('select', function (event) {
     keymatrix.update();
 });
-
-editor.on('input-active', function (event) {
-    keymatrix.element.style.display = 'none';
-});
-
-editor.on('input-inactive', function (event) {
-    keymatrix.element.style.display = 'block';
-});
-
 
 window.addEventListener('resize', updateSize);
 updateSize();
@@ -174,12 +168,21 @@ window.addEventListener('keydown', function (e) {
                 editor.undo();
                 break;
         }
+    } else if (e.shiftKey) {
+        switch (key) {
+            case 9:
+                editor.previousPlaceholder();
+                break;
+        }
     } else {
         switch (key) {
             case 8:
                 if (editor.backspace()) {
                     e.preventDefault();
                 }
+                break;
+            case 9:
+                editor.nextPlaceholder();
                 break;
             case 37:
                 editor.left();
