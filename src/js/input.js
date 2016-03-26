@@ -137,6 +137,7 @@ KeyMatrix.prototype.update = function () {
  * @param {?string} label
  * @param {?string} help
  * @param {Function} action
+ * @param {?string} [type]
  */
 function Key(label, help, action, type) {
     this.label = label;
@@ -184,7 +185,7 @@ Key.getString = function (editor) {
     return new Key('"abc"', 'string', function () {
         editor.string();
     }, 'literal');
-}
+};
 
 Key.getName = function (editor, name) {
     return new Key(name, null, function () {
@@ -298,6 +299,39 @@ Key.getLet = function (editor) {
     }, 'keyword');
 };
 
+Key.getApply = function (editor) {
+    return new Key('( )', 'apply', function () {
+        if (editor.selection !== null && editor.selection.isExpression()) {
+            var selection = editor.selection;
+            if (selection.type === 'app-expression') {
+                var placeholder = new AstNode('placeholder');
+                editor.do(function () {
+                    selection.addChild(placeholder);
+                    editor.render(selection);
+                    editor.select(placeholder);
+                }, function () {
+                    selection.removeChild(placeholder);
+                    editor.render(selection);
+                    editor.select(selection);
+                });
+            } else {
+                var node = new AstNode('app-expression');
+                editor.do(function () {
+                    selection.replaceWith(node);
+                    node.addChild(selection);
+                    node.addChild(new AstNode('placeholder'));
+                    editor.render(node.parent);
+                    editor.select(node.children[1]);
+                }, function () {
+                    node.replaceWith(selection);
+                    editor.render(selection.parent);
+                    editor.select(selection);
+                });
+            }
+        }
+    });
+};
+
 Key.getAssign = function (editor) {
     return new Key('=', 'assign', function () {
         if (editor.selection !== null && editor.selection.isExpression()) {
@@ -350,6 +384,8 @@ Key.getAdd = function (editor) {
                     editor.render(editor.selection);
                     editor.select(placeholder);
                     break;
+                case 'app-expression':
+                    break;
             }
         }
     });
@@ -395,7 +431,7 @@ Key.getRename = function (editor) {
             }
         }
     });
-}
+};
 
 Key.prototype.render = function () {
     var el = document.createElement('button');

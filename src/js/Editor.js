@@ -405,16 +405,45 @@ Editor.prototype.delete = function () {
             case 'typed-parameter':
                 throw 'not implemented';
             default:
-                var node = new AstNode('placeholder');
-                this.do(function () {
-                    selection.replaceWith(node);
-                    this.render(node.parent);
-                    this.select(node);
-                }, function () {
-                    node.replaceWith(selection);
-                    this.render(selection.parent);
-                    this.select(selection);
-                });
+                if (selection.parent !== null && selection.parent.type === 'app-expression') {
+                    var application = selection.parent;
+                    var index = application.indexOf(selection);
+                    if (application.children.length > 2) {
+                        this.do(function () {
+                            application.removeChild(selection);
+                            this.render(application);
+                            this.select(application.children[application.children.length - 1]);
+                        }, function () {
+                            application.insert(index, selection);
+                            this.render(application);
+                            this.select(selection);
+                        });
+                    } else {
+                        var otherIndex = index === 0 ? 1 : 0;
+                        var other = application.nodeAt(otherIndex);
+                        this.do(function () {
+                            application.replaceWith(other);
+                            this.render(other.parent);
+                            this.select(other);
+                        }, function () {
+                            other.replaceWith(application);
+                            application.insert(otherIndex, other);
+                            this.render(application.parent);
+                            this.select(selection);
+                        });
+                    }
+                } else {
+                    var node = new AstNode('placeholder');
+                    this.do(function () {
+                        selection.replaceWith(node);
+                        this.render(node.parent);
+                        this.select(node);
+                    }, function () {
+                        node.replaceWith(selection);
+                        this.render(selection.parent);
+                        this.select(selection);
+                    });
+                }
                 break;
         }
     }

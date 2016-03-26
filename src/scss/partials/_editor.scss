@@ -59,7 +59,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         padding: 0 2px;
     }
 
-    .function-definition, .let-expression, .lambda-expression, .if-expression, .assign {
+    .function-definition, .let-expression, .lambda-expression, .if-expression, .app-expression, .assign {
         @include sexpr;
     }
     

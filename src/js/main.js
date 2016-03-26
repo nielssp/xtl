@@ -73,8 +73,10 @@ var defaultLayout = function (matrix, cols, rows) {
     }
     if (rows > 3) {
         matrix[cols - 1][rows - 4] = input.Key.getAssign(editor);
+        matrix[cols - 2][rows - 3] = input.Key.getApply(editor);
     } else {
         matrix[cols - 2][rows - 3] = input.Key.getAssign(editor);
+        matrix[cols - 3][rows - 3] = input.Key.getApply(editor);
     }
     matrix[cols - 1][rows - 3] = input.Key.getDelete(editor);
     matrix[cols - 1][rows - 2] = input.Key.getUndo(editor);
