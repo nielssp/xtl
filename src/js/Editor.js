@@ -405,7 +405,7 @@ Editor.prototype.delete = function () {
             case 'typed-parameter':
                 throw 'not implemented';
             default:
-                if (selection.parent !== null && selection.parent.type === 'app-expression') {
+                if (selection.type === 'placeholder' && selection.parent !== null && selection.parent.type === 'app-expression') {
                     var application = selection.parent;
                     var index = application.indexOf(selection);
                     if (application.children.length > 2) {
