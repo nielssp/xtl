@@ -153,6 +153,9 @@ window.addEventListener('resize', updateSize);
 updateSize();
 
 window.addEventListener('keydown', function (e) {
+    if (editor.inputActive) {
+        return;
+    }
     var key = e.keyCode || e.which;
     if (key >= 48 && key <= 57) {
         editor.number(key - 48);
