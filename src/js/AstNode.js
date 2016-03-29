@@ -105,6 +105,7 @@ AstNode.prototype.addChild = function (node) {
     node.detach();
     node.parent = this;
     this.children.push(node);
+    return this;
 };
 
 AstNode.prototype.removeChild = function (node) {

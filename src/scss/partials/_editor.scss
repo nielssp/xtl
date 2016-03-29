@@ -87,12 +87,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         }
     }
 
-    .keyword, .method, .name, .literal, .parameters, .typed-parameters {
-        display: inline-block;
+    .keyword, .method, .name, .literal, .parameters, .typed-parameters, .subexpression, .applied-type, .function-type {
+        display: inline;
         margin: 0 5px;
     }
+    
+    .type-annotation {
+        display: inline;
+        &:before {
+            display: inline;
+            content: ':';
+            color: #5C7077;
+        }
+    }
 
-    .parameters, .typed-parameters {
+    .parameters, .typed-parameters, .subexpression, .applied-type, .function-type {
         &:before {
             content: '(';
             color: #5C7077;

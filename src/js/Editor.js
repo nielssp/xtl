@@ -68,7 +68,11 @@ Editor.prototype.render = function (node) {
             name.className = 'name';
             name.textContent = node.value;
             el.appendChild(name);
-            el.appendChild(this.render(node.children[0]));
+            var type = document.createElement('div');
+            type.className = 'type-annotation';
+            type.appendChild(this.render(node.children[0]));
+            el.appendChild(type);
+            el.appendChild(this.render(node.children[1]));
             break;
         case 'function-definition':
             el.className = 'function-definition';
@@ -84,13 +88,27 @@ Editor.prototype.render = function (node) {
                 sig.className = 'subexpression';
                 sig.appendChild(name);
                 node.children[0].children.forEach(function (child) {
-                    sig.appendChild(this.render(child));
+                    var parameter = document.createElement('div');
+                    parameter.className = 'typed-parameter';
+                    var name = document.createElement('div');
+                    name.className = 'name';
+                    name.textContent = child.value;
+                    var type = document.createElement('div');
+                    type.className = 'type-annotation';
+                    type.appendChild(this.render(child.children[0]));
+                    parameter.appendChild(name);
+                    parameter.appendChild(type);
+                    sig.appendChild(parameter);
                 }, this);
                 el.appendChild(sig);
             } else {
                 el.appendChild(name);
             }
-            el.appendChild(this.render(node.children[1]));
+            var type = document.createElement('div');
+            type.className = 'type-annotation';
+            type.appendChild(this.render(node.children[1]));
+            el.appendChild(type);
+            el.appendChild(this.render(node.children[2]));
             break;
         case 'typed-paremeters':
         case 'parameters':

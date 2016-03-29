@@ -29,6 +29,10 @@ var Module = require('./Module');
 var program = new Module('program');
 
 var ast = new AstNode('constant-definition', 'main');
+var type = new AstNode('applied-type');
+type.addChild(new AstNode('name', 'io'));
+type.addChild(new AstNode('name', 'unit'));
+ast.addChild(type)
 var placeholder = new AstNode('placeholder');
 ast.addChild(placeholder);
 
