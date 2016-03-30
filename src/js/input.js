@@ -366,12 +366,19 @@ Key.getAssign = function (editor) {
 Key.getAdd = function (editor) {
     return new Key('+', 'add', function () {
         if (editor.selection !== null) {
+            var selection = editor.selection;
             switch (editor.selection.type) {
                 case 'parameters':
                     var parameter = new AstNode('parameter', editor.selection.getNextFreeSymbol());
-                    editor.selection.addChild(parameter);
-                    editor.render(editor.selection.parent);
-                    editor.select(parameter);
+                    editor.do(function () {
+                        selection.addChild(parameter);
+                        editor.render(selection.parent);
+                        editor.select(parameter);
+                    }, function () {
+                        selection.removeChild(parameter);
+                        editor.render(selection.parent);
+                        editor.select(selection);
+                    });
                     break;
                 case 'typed-parameters':
                     throw 'not implemented';
@@ -385,6 +392,16 @@ Key.getAdd = function (editor) {
                     editor.select(placeholder);
                     break;
                 case 'app-expression':
+                    var placeholder = new AstNode('placeholder');
+                    editor.do(function () {
+                        selection.addChild(placeholder);
+                        editor.render(selection);
+                        editor.select(placeholder);
+                    }, function () {
+                        selection.removeChild(placeholder);
+                        editor.render(selection);
+                        editor.select(selection);
+                    });
                     break;
             }
         }

@@ -124,6 +124,7 @@ var defaultLayout = function (matrix, cols, rows) {
             case 'parameters':
             case 'typed-parameters':
             case 'let-expression':
+            case 'app-expression':
                 matrix[cols - 4][rows - 1] = input.Key.getAdd(editor);
                 break;
             case 'name':
