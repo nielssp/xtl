@@ -44,15 +44,8 @@ function infer(env, node) {
     }
 }
 
-function Type(kind, value) {
+function Type(kind) {
     this.kind = kind;
-    this.value = value;
-    
-    this.children = [];
-}
-
-function TypeScheme(names, type) {
-    
 }
 
 function TypeEnv(map) {
