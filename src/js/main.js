@@ -32,11 +32,9 @@ var ast = new AstNode('constant-definition', 'main');
 var type = new AstNode('applied-type');
 type.addChild(new AstNode('name', 'io'));
 type.addChild(new AstNode('name', 'unit'));
-ast.addChild(type)
+ast.addChild(type);
 var placeholder = new AstNode('placeholder');
 ast.addChild(placeholder);
-
-program.define('main', ast);
 
 var editor = new Editor(document.getElementById('editor'));
 editor.setRoot(ast);

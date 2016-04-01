@@ -32,10 +32,36 @@ function Module(name) {
     this.types = {};
 }
 
-Module.prototype.define = function (name, node) {
-    this.members[name] = node;
+Module.prototype.find = function (name) {
+    if (this.members.hasOwnProperty(name)) {
+        return this.members[name];
+    }
+    for (var i = 0; i < this.imports.length; i++) {
+        var value = this.imports[i].find(name);
+        if (value !== null) {
+            return value;
+        }
+    }
+    return null;
 };
 
-Module.prototype.defineType = function (name, node) {
-    this.types[name] = node;
+Module.prototype.findType = function (name) {
+    if (this.types.hasOwnProperty(name)) {
+        return this.types[name];
+    }
+    for (var i = 0; i < this.imports.length; i++) {
+        var type = this.imports[i].findType(name);
+        if (type !== null) {
+            return type;
+        }
+    }
+    return null;
+};
+
+Module.prototype.define = function (name, value) {
+    this.members[name] = value;
+};
+
+Module.prototype.defineType = function (name, type) {
+    this.types[name] = type;
 };

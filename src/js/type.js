@@ -28,7 +28,7 @@ function infer(env, node) {
             var cond = infer(env, node.children[0]);
             var cons = infer(env.apply(cond.sub), node.children[1]);
             var alt = infer(env.apply(cons.sub), node.children[2]);
-            var sub1 = cond.type.apply(alt.sub).unify('bool');
+            var sub1 = cond.type.apply(alt.sub).unify(Type.Bool);
             var sub2 = cons.type.apply(sub1).unify(alt.apply(sub1));
             return {type: alt.type, sub: compose(alt.sub, sub1, sub2)};
         case 'app-expression':
@@ -36,31 +36,75 @@ function infer(env, node) {
         case 'name':
             break;
         case 'number':
-            return {type: 'number', sub: {}};
+            return {type: Type.Number, sub: {}};
         case 'string':
-            return {type: 'string', sub: {}};
+            return {type: Type.String, sub: {}};
         case 'placeholder':
             break;
     }
 }
 
-function Type(kind) {
-    this.kind = kind;
+function compose(sub1, sub2) {
+    // TODO: implement
 }
+
+function TypeVar(name) {
+    this.name = name;
+}
+
+TypeVar.prototype.toString = function () {
+    return this.name;
+};
+
+function Type(tag, children) {
+    this.tag = tag;
+    this.children = typeof children === 'undefined' ? [] : children;
+}
+
+Type.Number = new Type('number');
+
+Type.Bool = new Type('bool');
+
+Type.String = new Type('string');
+
+Type.Unit = new Type('unit');
+
+Type.Io = function (t) {
+    return new Type('io', [t]);
+};
+
+Type.Function = function (t1, t2) {
+    return new Type('->', [t1, t2]);
+};
+
+Type.prototype.toString = function () {
+    if (this.children.length === 0) {
+        return this.tag;
+    }
+    return '(' + this.tag + ' ' + this.children.map(function (c) {
+        return c.toString();
+    }).join(' ') + ')';
+};
+
+Type.prototype.unify = function (other) {
+    if (other instanceof TypeVar) {
+        // TODO: check this.ftv
+        var sub = {};
+        sub[other.name] = this;
+        return sub;
+    }
+    if (other instanceof Type && other.tag === this.tag) {
+        if (other.children.length === this.children.length) {
+            var sub = {};
+            for (var i = 0; i < this.children.length; i++) {
+                sub = compose(sub, this.children[i].apply(sub).unify(other.children[i].apply(sub)));
+            }
+            return sub;
+        }
+    }
+    throw new Error('types do not unify: ' + this.toString() + ' vs ' + other.toString());
+};
 
 function TypeEnv(map) {
-    
-}
 
-
-function apply(type, substitution) {
-    switch (type.kind) {
-        
-    }
-}
-
-function unify(typeA, typeB) {
-    switch (typeA.kind) {
-        
-    }
 }
