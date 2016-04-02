@@ -62,7 +62,7 @@ function Type(tag, children) {
     this.tag = tag;
     this.children = typeof children === 'undefined' ? [] : children;
     
-    this.ftv = _.union(_.pluck(this.children, 'ftv'));
+    this.ftv = _.union.apply(_, _.pluck(this.children, 'ftv'));
 }
 
 Type.Number = new Type('number');

@@ -6,11 +6,10 @@ module.exports = function (config) {
         basePath: '',
         frameworks: ['mocha', 'chai'],
         files: [
-            'src/js/main.js',
             'test/*.spec.js'
         ],
         preprocessors: {
-            'src/js/main.js': ['webpack']
+            'test/*.spec.js': ['webpack']
         },
         webpack: webpackConfig,
         reporters: ['progress'],
