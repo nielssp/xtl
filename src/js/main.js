@@ -26,6 +26,8 @@ var AstNode = require('./AstNode');
 
 var Module = require('./Module');
 
+var type = require('./type');
+
 var program = new Module('program');
 
 var ast = new AstNode('constant-definition', 'main');

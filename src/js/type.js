@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+var _ = require('underscore');
+
 exports.Type = Type;
 exports.infer = infer;
 
@@ -59,6 +61,8 @@ TypeVar.prototype.toString = function () {
 function Type(tag, children) {
     this.tag = tag;
     this.children = typeof children === 'undefined' ? [] : children;
+    
+    this.ftv = _.union(_.pluck(this.children, 'ftv'));
 }
 
 Type.Number = new Type('number');
@@ -104,6 +108,12 @@ Type.prototype.unify = function (other) {
     }
     throw new Error('types do not unify: ' + this.toString() + ' vs ' + other.toString());
 };
+
+function TypeScheme(names, type) {
+    this.names = names;
+    
+    this.type = type;
+}
 
 function TypeEnv(map) {
 
