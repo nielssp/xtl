@@ -47,7 +47,14 @@ function infer(env, node) {
 }
 
 function compose(sub1, sub2) {
-    // TODO: implement
+    var sub = {};
+    arguments.map(function (subp) {
+        _.mapObject(sub, function (type) {
+            return type.apply(subp);
+        });
+        sub = _.extend(sub, subp);
+    });
+    return sub;
 }
 
 function TypeVar(name) {
@@ -56,6 +63,13 @@ function TypeVar(name) {
 
 TypeVar.prototype.toString = function () {
     return this.name;
+};
+
+TypeVar.prototype.apply = function (sub) {
+    if (_.has(sub, this.name)) {
+        return sub[this.name];
+    }
+    return this;
 };
 
 function Type(tag, children) {
@@ -88,6 +102,12 @@ Type.prototype.toString = function () {
     return '(' + this.tag + ' ' + this.children.map(function (c) {
         return c.toString();
     }).join(' ') + ')';
+};
+
+Type.prototype.apply = function (sub) {
+    return new Type(this.tag, _.map(this.children, function (type) {
+        return type.apply(sub);
+    }));
 };
 
 Type.prototype.unify = function (other) {
