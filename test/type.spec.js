@@ -3,6 +3,7 @@ var assert = require('chai').assert;
 var compose = require('../src/js/type').compose;
 
 var Type = require('../src/js/type').Type;
+var TypeVar = require('../src/js/type').TypeVar;
 
 describe('compose', function () {
    it('should apply the substitution', function () {

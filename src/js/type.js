@@ -18,7 +18,9 @@
 var _ = require('underscore');
 
 exports.Type = Type;
+exports.TypeVar = TypeVar;
 exports.infer = infer;
+exports.compose = compose;
 
 function infer(env, node) {
     switch (node.type) {
@@ -48,8 +50,8 @@ function infer(env, node) {
 
 function compose(sub1, sub2) {
     var sub = {};
-    arguments.map(function (subp) {
-        _.mapObject(sub, function (type) {
+    _.map(arguments, function (subp) {
+        sub = _.mapObject(sub, function (type, key) {
             return type.apply(subp);
         });
         sub = _.extend(sub, subp);
