@@ -5,6 +5,10 @@ var compose = require('../src/js/type').compose;
 var Type = require('../src/js/type').Type;
 var TypeVar = require('../src/js/type').TypeVar;
 
+describe('infer', function () {
+    
+});
+
 describe('compose', function () {
    it('should apply the substitution', function () {
        var sub1 = {a: new TypeVar('b')};

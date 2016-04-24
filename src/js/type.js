@@ -135,8 +135,20 @@ function TypeScheme(names, type) {
     this.names = names;
     
     this.type = type;
+    
+    this.ftv = _.difference(type.ftv, names);
 }
+
+TypeScheme.prototype.apply = function (sub) {
+    return new TypeScheme(this.name, this.type.apply(_.omit(sub, this.names)));
+};
 
 function TypeEnv(map) {
-
+    this.map = map;
 }
+
+TypeEnv.prototype.apply = function (sub) {
+    return new TypeEnv(_.mapObject(this.map, function (type) {
+        return type.apply(sub);
+    }));
+};
