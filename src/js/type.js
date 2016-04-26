@@ -22,9 +22,17 @@ exports.TypeVar = TypeVar;
 exports.infer = infer;
 exports.compose = compose;
 
+var typeVarCounter = 0;
+
+function newTypeVar(prefix) {
+    typeVarCounter++;
+    return new TypeVar(prefix + typeVarCounter);
+}
+
 function infer(env, node) {
     switch (node.type) {
         case 'let-expression':
+            var v = newTypeVar('t');
             break;
         case 'lambda-expression':
             break;
@@ -151,4 +159,18 @@ TypeEnv.prototype.apply = function (sub) {
     return new TypeEnv(_.mapObject(this.map, function (type) {
         return type.apply(sub);
     }));
+};
+
+TypeEnv.prototype.get = function (name) {
+    return this.map[name];
+};
+
+TypeEnv.prototype.has = function (name) {
+    return this.map.hasOwnProperty(name);
+};
+
+TypeEnv.prototype.updated = function (name, type) {
+    var env = new TypeEnv(_.clone(this.map));
+    env.map[name] = type;
+    return env;
 };

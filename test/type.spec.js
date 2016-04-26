@@ -6,7 +6,6 @@ var Type = require('../src/js/type').Type;
 var TypeVar = require('../src/js/type').TypeVar;
 
 describe('infer', function () {
-    
 });
 
 describe('compose', function () {
