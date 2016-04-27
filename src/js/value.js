@@ -19,10 +19,36 @@ exports.evaluate = evaluate;
 
 exports.Value = Value;
 
-function evaluate(node) {
+function evaluate(env, node) {
     switch (node.type) {
+        case 'let-expression':
+            // TODO: implement
+            break;
+        case 'lambda-expression':
+            // TODO: implement
+            break;
+        case 'if-expression':
+            var cond = evaluate(env, node.children[0]);
+            if (cond.value === true) {
+                return evaluate(env, node.children[1]);
+            } else {
+                return evaluate(env, node.children[2]);
+            }
+        case 'app-expression':
+            // TODO: implement
+            break;
+        case 'name':
+            if (env.has(node.value)) {
+                return env.get(node.value);
+            }
+            node.error = 'Undefined variable';
+            break;
         case 'number':
             return Value.Number(parseFloat(node.value));
+        case 'string':
+            return Value.String(node.value);
+        case 'placeholder':
+            break;
     }
     return Value.Unit;
 }
@@ -34,17 +60,37 @@ function Value() {
 Value.Unit = new Value();
 
 Value.Number = function (value) {
-    
+    var value = new Value();
+    value.value = value;
+    return value;
 };
 
 Value.String = function (value) {
-    
+    this.value = value;
 };
 
 Value.Bool = function (value) {
-    
+    this.value = value;
 };
 
 Value.Function = function (func) {
-    
+    this.func = func;
+};
+
+function Env(map) {
+    this.map = map;
+}
+
+Env.prototype.get = function (name) {
+    return this.map[name];
+};
+
+Env.prototype.has = function (name) {
+    return this.map.hasOwnProperty(name);
+};
+
+Env.prototype.updated = function (name, type) {
+    var env = new Env(_.clone(this.map));
+    env.map[name] = type;
+    return env;
 };
