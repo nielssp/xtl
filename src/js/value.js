@@ -22,8 +22,13 @@ exports.Value = Value;
 function evaluate(env, node) {
     switch (node.type) {
         case 'let-expression':
-            // TODO: implement
-            break;
+            var assigns = node.children[0];
+            var body = node.children[1];
+            for (var i = 0; i < assigns.children.length; i++) {
+                var assign = assigns.children[i];
+                env = env.updated(assign.value, evaluate(env, assign.children[0]));
+            }
+            return evaluate(env, body);
         case 'lambda-expression':
             // TODO: implement
             break;
