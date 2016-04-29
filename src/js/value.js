@@ -30,8 +30,15 @@ function evaluate(env, node) {
             }
             return evaluate(env, body);
         case 'lambda-expression':
-            // TODO: implement
-            break;
+            var parameters = node.children[0].children;
+            var body = node.children[1];
+            return Function(function(arguments) {
+                var newEnv = env;
+                _.each(_.zip(parameters, arguments), function(parArg) {
+                    newEnv = newEnv.updated(parArg[0].value, parArg[1]);
+                });
+                return evaluate(newEnv, body);
+            });
         case 'if-expression':
             var cond = evaluate(env, node.children[0]);
             if (cond.value === true) {
@@ -40,7 +47,13 @@ function evaluate(env, node) {
                 return evaluate(env, node.children[2]);
             }
         case 'app-expression':
-            // TODO: implement
+            var callee = evaluate(env, node.children[0]);
+            var arguments = [];
+            for (var i = 1; i < node.children.length; i++) {
+                arguments.push(evaluate(env, node.children[i]));
+            }
+            // TODO: check type
+            return callee.func.call(null, arguments);
             break;
         case 'name':
             if (env.has(node.value)) {
