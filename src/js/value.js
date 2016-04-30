@@ -62,9 +62,9 @@ function evaluate(env, node) {
             node.error = 'Undefined variable';
             break;
         case 'number':
-            return Value.Number(parseFloat(node.value));
+            return new Value.Number(parseFloat(node.value));
         case 'string':
-            return Value.String(node.value);
+            return new Value.String(node.value);
         case 'placeholder':
             break;
     }
@@ -78,22 +78,32 @@ function Value() {
 Value.Unit = new Value();
 
 Value.Number = function (value) {
-    var value = new Value();
-    value.value = value;
-    return value;
+    Value.call(this);
+    this.value = value;
 };
+Value.Number.prototype = Object.create(Value.prototype);
+Value.Number.prototype.constructor = Value.Number;
 
 Value.String = function (value) {
+    Value.call(this);
     this.value = value;
 };
+Value.String.prototype = Object.create(Value.prototype);
+Value.String.prototype.constructor = Value.String;
 
 Value.Bool = function (value) {
+    Value.call(this);
     this.value = value;
 };
+Value.Bool.prototype = Object.create(Value.prototype);
+Value.Bool.prototype.constructor = Value.Bool;
 
 Value.Function = function (func) {
+    Value.call(this);
     this.func = func;
 };
+Value.Function.prototype = Object.create(Value.prototype);
+Value.Function.prototype.constructor = Value.Function;
 
 function Env(map) {
     this.map = map;
