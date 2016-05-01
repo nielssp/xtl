@@ -15,9 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+var _ = require('underscore');
+
 exports.evaluate = evaluate;
 
 exports.Value = Value;
+
+exports.Env = Env;
 
 function evaluate(env, node) {
     switch (node.type) {
@@ -108,6 +112,8 @@ Value.Function.prototype.constructor = Value.Function;
 function Env(map) {
     this.map = map;
 }
+
+Env.empty = new Env({});
 
 Env.prototype.get = function (name) {
     return this.map[name];
