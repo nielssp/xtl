@@ -27,4 +27,18 @@ describe('evaluate', function () {
         assert.instanceOf(value, Value.String);
         assert.strictEqual(value.value, "baz");
     });
+    
+    it('should evaluate let-expressions', function () {
+        var letExpr = new AstNode('let-expression');
+        var assigns = new AstNode('assigns');
+        var assign = new AstNode('assign', 'a');
+        assign.addChild(new AstNode('string', 'foo bar baz'));
+        assigns.addChild(assign);
+        letExpr.addChild(assigns);
+        letExpr.addChild(new AstNode('name', 'a'));
+        
+        var value = evaluate(Env.empty, letExpr);
+        assert.instanceOf(value, Value.String);
+        assert.strictEqual(value.value, "foo bar baz");
+    });
 });
