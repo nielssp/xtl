@@ -36,9 +36,9 @@ function evaluate(env, node) {
         case 'lambda-expression':
             var parameters = node.children[0].children;
             var body = node.children[1];
-            return Function(function(arguments) {
+            return new Value.Function(function (arguments) {
                 var newEnv = env;
-                _.each(_.zip(parameters, arguments), function(parArg) {
+                _.each(_.zip(parameters, arguments), function (parArg) {
                     newEnv = newEnv.updated(parArg[0].value, parArg[1]);
                 });
                 return evaluate(newEnv, body);
@@ -76,7 +76,7 @@ function evaluate(env, node) {
 }
 
 function Value() {
-    
+
 }
 
 Value.Unit = new Value();
