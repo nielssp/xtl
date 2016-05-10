@@ -122,7 +122,9 @@ Type.prototype.apply = function (sub) {
 
 Type.prototype.unify = function (other) {
     if (other instanceof TypeVar) {
-        // TODO: check this.ftv
+        if (_.contains(this.ftv, other.name)) {
+            throw new Error('occurs check failed: ' + other.name + ' vs ' + this.toString());
+        }
         var sub = {};
         sub[other.name] = this;
         return sub;
